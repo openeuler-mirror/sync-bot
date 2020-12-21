@@ -37,9 +37,9 @@ func (o *options) Validate() error {
 func gatherOptions(fs *flag.FlagSet, args ...string) options {
 	var o options
 	//fs.BoolVar(&o.dryRun, "dry-run", true, "Dry run for testing. Uses API tokens but does not mutate.")
-	fs.StringVar(&o.giteeToken, "gitee-token", "/etc/sync-bot/token.conf", "Path to the file containing the Gitee token.")
+	fs.StringVar(&o.giteeToken, "gitee-token", "token.conf", "Path to the file containing the Gitee token.")
 	fs.IntVar(&o.port, "port", 8765, "Port to listen on.")
-	fs.StringVar(&o.webhookSecret, "webhook-secret", "/etc/sync-bot/secret.conf", "Path to the file containing the Gitee Webhook secret.")
+	fs.StringVar(&o.webhookSecret, "webhook-secret", "secret.conf", "Path to the file containing the Gitee Webhook secret.")
 	_ = fs.Parse(args)
 	return o
 }
