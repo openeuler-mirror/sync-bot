@@ -1,27 +1,35 @@
 POST http://localhost:1234/hook
 Content-Type: application/json
-Accept: application/json
+User-Agent: git-oschina-hook
+X-Gitee-Token: Secret
+X-Gitee-Timestamp: 1608223443747
+X-Gitee-Ping: false
 X-Gitee-Event: Merge Request Hook
+X-Git-Oschina-Event: Merge Request Hook
 
 {
-  "action": "open",
+  "action": "close",
   "action_desc": null,
   "pull_request": {
     "id": 3190449,
     "number": 5,
-    "state": "open",
+    "state": "closed",
     "html_url": "https://gitee.com/open-euler/syncbot-example/pulls/5",
     "diff_url": "https://gitee.com/open-euler/syncbot-example/pulls/5.diff",
     "patch_url": "https://gitee.com/open-euler/syncbot-example/pulls/5.patch",
     "title": "hello",
-    "body": "world",
-    "labels": [],
-    "languages": [],
+    "body": "world\r\n\r\nhttps://gitee.com/open-euler/syncbot-example/issues/I29DVN\r\n\r\nhttps://gitee.com/open-euler/syncbot-example/issues/I29DVM",
+    "labels": [
+
+    ],
+    "languages": [
+
+    ],
     "created_at": "2020-12-07T22:09:35+08:00",
-    "updated_at": "2020-12-07T22:09:35+08:00",
-    "closed_at": null,
+    "updated_at": "2020-12-18T00:44:03+08:00",
+    "closed_at": "2020-12-18T00:44:03+08:00",
     "merged_at": null,
-    "merge_commit_sha": null,
+    "merge_commit_sha": "c1ec9213163d5ea0e1337d2da6c4c9c18279195d",
     "merge_reference_name": "refs/pull/5/MERGE",
     "user": {
       "id": 341810,
@@ -37,9 +45,25 @@ X-Gitee-Event: Merge Request Hook
       "site_admin": false
     },
     "assignee": null,
-    "assignees": [],
+    "assignees": [
+      {
+        "id": 341810,
+        "name": "syncBot",
+        "email": "custa@126.com",
+        "username": "sync-bot",
+        "user_name": "sync-bot",
+        "url": "https://gitee.com/sync-bot",
+        "login": "sync-bot",
+        "avatar_url": "https://gitee.com/assets/no_portrait.png",
+        "html_url": "https://gitee.com/sync-bot",
+        "type": "User",
+        "site_admin": false
+      }
+    ],
     "tester": null,
-    "testers": [],
+    "testers": [
+
+    ],
     "need_test": false,
     "need_review": true,
     "milestone": null,
@@ -84,7 +108,7 @@ X-Gitee-Event: Merge Request Hook
         "description": "syncbot-example 示例",
         "fork": false,
         "created_at": "2020-11-27T11:18:01+08:00",
-        "updated_at": "2020-12-07T22:08:38+08:00",
+        "updated_at": "2020-12-18T00:44:03+08:00",
         "pushed_at": "2020-12-07T22:06:04+08:00",
         "git_url": "git://gitee.com/open-euler/syncbot-example.git",
         "ssh_url": "git@gitee.com:open-euler/syncbot-example.git",
@@ -102,7 +126,7 @@ X-Gitee-Event: Merge Request Hook
         "has_wiki": true,
         "has_pages": false,
         "license": "MulanPSL-2.0",
-        "open_issues_count": 0,
+        "open_issues_count": 2,
         "default_branch": "master",
         "namespace": "open-euler",
         "name_with_namespace": "openEuler/syncbotExample",
@@ -150,7 +174,7 @@ X-Gitee-Event: Merge Request Hook
         "description": "syncbot-example 示例",
         "fork": false,
         "created_at": "2020-11-27T11:18:01+08:00",
-        "updated_at": "2020-12-07T22:08:38+08:00",
+        "updated_at": "2020-12-18T00:34:30+08:00",
         "pushed_at": "2020-12-07T22:06:04+08:00",
         "git_url": "git://gitee.com/open-euler/syncbot-example.git",
         "ssh_url": "git@gitee.com:open-euler/syncbot-example.git",
@@ -168,7 +192,7 @@ X-Gitee-Event: Merge Request Hook
         "has_wiki": true,
         "has_pages": false,
         "license": "MulanPSL-2.0",
-        "open_issues_count": 0,
+        "open_issues_count": 2,
         "default_branch": "master",
         "namespace": "open-euler",
         "name_with_namespace": "openEuler/syncbotExample",
@@ -177,7 +201,7 @@ X-Gitee-Event: Merge Request Hook
     },
     "merged": false,
     "mergeable": true,
-    "merge_status": "unchecked",
+    "merge_status": "can_be_merged",
     "updated_by": {
       "id": 341810,
       "name": "syncBot",
@@ -191,7 +215,7 @@ X-Gitee-Event: Merge Request Hook
       "type": "User",
       "site_admin": false
     },
-    "comments": 0,
+    "comments": 7,
     "commits": 1,
     "additions": 1,
     "deletions": 0,
@@ -200,11 +224,13 @@ X-Gitee-Event: Merge Request Hook
   "number": 5,
   "iid": 5,
   "title": "hello",
-  "body": "world",
-  "languages": [],
-  "state": "open",
-  "merge_status": "unchecked",
-  "merge_commit_sha": null,
+  "body": "world\r\n\r\nhttps://gitee.com/open-euler/syncbot-example/issues/I29DVN\r\n\r\nhttps://gitee.com/open-euler/syncbot-example/issues/I29DVM",
+  "languages": [
+
+  ],
+  "state": "closed",
+  "merge_status": "can_be_merged",
+  "merge_commit_sha": "c1ec9213163d5ea0e1337d2da6c4c9c18279195d",
   "url": "https://gitee.com/open-euler/syncbot-example/pulls/5",
   "source_branch": "branch3",
   "source_repo": {
@@ -232,7 +258,7 @@ X-Gitee-Event: Merge Request Hook
       "description": "syncbot-example 示例",
       "fork": false,
       "created_at": "2020-11-27T11:18:01+08:00",
-      "updated_at": "2020-12-07T22:08:38+08:00",
+      "updated_at": "2020-12-18T00:44:03+08:00",
       "pushed_at": "2020-12-07T22:06:04+08:00",
       "git_url": "git://gitee.com/open-euler/syncbot-example.git",
       "ssh_url": "git@gitee.com:open-euler/syncbot-example.git",
@@ -250,7 +276,7 @@ X-Gitee-Event: Merge Request Hook
       "has_wiki": true,
       "has_pages": false,
       "license": "MulanPSL-2.0",
-      "open_issues_count": 0,
+      "open_issues_count": 2,
       "default_branch": "master",
       "namespace": "open-euler",
       "name_with_namespace": "openEuler/syncbotExample",
@@ -280,7 +306,7 @@ X-Gitee-Event: Merge Request Hook
       "description": "syncbot-example 示例",
       "fork": false,
       "created_at": "2020-11-27T11:18:01+08:00",
-      "updated_at": "2020-12-07T22:08:38+08:00",
+      "updated_at": "2020-12-18T00:44:03+08:00",
       "pushed_at": "2020-12-07T22:06:04+08:00",
       "git_url": "git://gitee.com/open-euler/syncbot-example.git",
       "ssh_url": "git@gitee.com:open-euler/syncbot-example.git",
@@ -298,7 +324,7 @@ X-Gitee-Event: Merge Request Hook
       "has_wiki": true,
       "has_pages": false,
       "license": "MulanPSL-2.0",
-      "open_issues_count": 0,
+      "open_issues_count": 2,
       "default_branch": "master",
       "namespace": "open-euler",
       "name_with_namespace": "openEuler/syncbotExample",
@@ -331,7 +357,7 @@ X-Gitee-Event: Merge Request Hook
       "description": "syncbot-example 示例",
       "fork": false,
       "created_at": "2020-11-27T11:18:01+08:00",
-      "updated_at": "2020-12-07T22:08:38+08:00",
+      "updated_at": "2020-12-18T00:34:30+08:00",
       "pushed_at": "2020-12-07T22:06:04+08:00",
       "git_url": "git://gitee.com/open-euler/syncbot-example.git",
       "ssh_url": "git@gitee.com:open-euler/syncbot-example.git",
@@ -349,7 +375,7 @@ X-Gitee-Event: Merge Request Hook
       "has_wiki": true,
       "has_pages": false,
       "license": "MulanPSL-2.0",
-      "open_issues_count": 0,
+      "open_issues_count": 2,
       "default_branch": "master",
       "namespace": "open-euler",
       "name_with_namespace": "openEuler/syncbotExample",
@@ -379,7 +405,7 @@ X-Gitee-Event: Merge Request Hook
       "description": "syncbot-example 示例",
       "fork": false,
       "created_at": "2020-11-27T11:18:01+08:00",
-      "updated_at": "2020-12-07T22:08:38+08:00",
+      "updated_at": "2020-12-18T00:34:30+08:00",
       "pushed_at": "2020-12-07T22:06:04+08:00",
       "git_url": "git://gitee.com/open-euler/syncbot-example.git",
       "ssh_url": "git@gitee.com:open-euler/syncbot-example.git",
@@ -397,7 +423,7 @@ X-Gitee-Event: Merge Request Hook
       "has_wiki": true,
       "has_pages": false,
       "license": "MulanPSL-2.0",
-      "open_issues_count": 0,
+      "open_issues_count": 2,
       "default_branch": "master",
       "namespace": "open-euler",
       "name_with_namespace": "openEuler/syncbotExample",
@@ -428,7 +454,7 @@ X-Gitee-Event: Merge Request Hook
     "description": "syncbot-example 示例",
     "fork": false,
     "created_at": "2020-11-27T11:18:01+08:00",
-    "updated_at": "2020-12-07T22:08:38+08:00",
+    "updated_at": "2020-12-18T00:34:30+08:00",
     "pushed_at": "2020-12-07T22:06:04+08:00",
     "git_url": "git://gitee.com/open-euler/syncbot-example.git",
     "ssh_url": "git@gitee.com:open-euler/syncbot-example.git",
@@ -446,7 +472,7 @@ X-Gitee-Event: Merge Request Hook
     "has_wiki": true,
     "has_pages": false,
     "license": "MulanPSL-2.0",
-    "open_issues_count": 0,
+    "open_issues_count": 2,
     "default_branch": "master",
     "namespace": "open-euler",
     "name_with_namespace": "openEuler/syncbotExample",
@@ -476,7 +502,7 @@ X-Gitee-Event: Merge Request Hook
     "description": "syncbot-example 示例",
     "fork": false,
     "created_at": "2020-11-27T11:18:01+08:00",
-    "updated_at": "2020-12-07T22:08:38+08:00",
+    "updated_at": "2020-12-18T00:34:30+08:00",
     "pushed_at": "2020-12-07T22:06:04+08:00",
     "git_url": "git://gitee.com/open-euler/syncbot-example.git",
     "ssh_url": "git@gitee.com:open-euler/syncbot-example.git",
@@ -494,7 +520,7 @@ X-Gitee-Event: Merge Request Hook
     "has_wiki": true,
     "has_pages": false,
     "license": "MulanPSL-2.0",
-    "open_issues_count": 0,
+    "open_issues_count": 2,
     "default_branch": "master",
     "namespace": "open-euler",
     "name_with_namespace": "openEuler/syncbotExample",
@@ -544,7 +570,7 @@ X-Gitee-Event: Merge Request Hook
   "hook_name": "merge_request_hooks",
   "hook_id": 491553,
   "hook_url": "https://gitee.com/open-euler/syncbot-example/hooks/491553/edit",
-  "password": "",
-  "timestamp": "1607350176145",
-  "sign": "vR3EgAYb3VNvQO27v1XwWfO1eTo0v3PYHdhPf2Hl7sY="
+  "password": "Secret",
+  "timestamp": "1608223443747",
+  "sign": ""
 }
