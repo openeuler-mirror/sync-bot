@@ -3,7 +3,7 @@ module sync-bot
 go 1.15
 
 require (
-	gitee.com/openeuler/go-gitee v0.0.0-20201111035308-c4384bf8d333
+	gitee.com/openeuler/go-gitee v0.0.0-20201221141555-02b1f8ea9e66
 	github.com/emicklei/go-restful/v3 v3.4.0
 	github.com/google/go-cmp v0.5.2 // indirect
 	github.com/json-iterator/go v1.1.10 // indirect
