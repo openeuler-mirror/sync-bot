@@ -39,8 +39,8 @@ func Test_gatherOptions(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			expected := &options{
 				port:          8765,
-				giteeToken:    "/etc/token.conf",
-				webhookSecret: "/etc/secret.conf",
+				giteeToken:    "token.conf",
+				webhookSecret: "secret.conf",
 			}
 			if tc.expected != nil {
 				tc.expected(expected)
