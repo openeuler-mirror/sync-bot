@@ -125,3 +125,10 @@ type PullRequestEvent struct {
 	PullRequest PullRequest `json:"pull_request"`
 	Repository  Repository  `json:"repository"`
 }
+
+type Commit struct {
+	Url     string `json:"url"`
+	Sha     string `json:"sha"`
+	HtmlUrl string `json:"html_url"`
+	Message string `json:"message"`
+}

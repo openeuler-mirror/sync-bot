@@ -22,6 +22,7 @@ type PullRequestClient interface {
 	CreatePullRequest(org, repo, title, body, head, base string) (int, error)
 	ListPullRequestComments(org, repo string, number int) ([]Comment, error)
 	ClosePullRequest(org, repo string, number int) error
+	ListPullRequestCommits(org, repo string, number int) ([]Commit, error)
 }
 
 // RepositoryClient interface for repository related API actions
@@ -136,12 +137,30 @@ func (c *client) ClosePullRequest(org, repo string, number int) error {
 }
 
 func (c *client) CreateComment(org, repo string, number int, comment string) error {
-	logrus.Debugln("CreateComment", org, repo, number, comment)
 	body := giteeapi.PullRequestCommentPostParam{
 		Body: comment,
 	}
 	_, _, err := c.giteeAPI.PullRequestsApi.PostV5ReposOwnerRepoPullsNumberComments(c.context, org, repo, int32(number), body)
 	return err
+}
+
+func (c *client) ListPullRequestCommits(org, repo string, number int) ([]Commit, error) {
+	opts := &giteeapi.GetV5ReposOwnerRepoPullsNumberCommitsOpts{}
+	commits_, _, err := c.giteeAPI.PullRequestsApi.GetV5ReposOwnerRepoPullsNumberCommits(c.context, org, repo, int32(number), opts)
+
+	commits := make([]Commit, 0)
+	if err != nil {
+		return nil, err
+	}
+	for _, c := range commits_ {
+		commit := Commit{Url: c.Url,
+			Sha:     c.Sha,
+			HtmlUrl: c.HtmlUrl,
+			Message: c.Commit.Message,
+		}
+		commits = append(commits, commit)
+	}
+	return commits, nil
 }
 
 func NewClient(getToken func() []byte) Client {
