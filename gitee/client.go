@@ -10,26 +10,26 @@ import (
 
 // CommentClient interface for comment related API actions
 type CommentClient interface {
-	CreateComment(org, repo string, number int, comment string) error
+	CreateComment(owner, repo string, number int, comment string) error
 }
 
 // PullRequestClient interface for pull request related API actions
 type PullRequestClient interface {
-	GetPullRequests(org, repo string) ([]PullRequest, error)
-	GetPullRequest(org, repo string, number int) (*PullRequest, error)
-	GetPullRequestChanges(org, repo string, number int) ([]PullRequestChange, error)
-	GetPullRequestPatch(org, repo string, number int) ([]byte, error)
-	CreatePullRequest(org, repo, title, body, head, base string) (int, error)
-	ListPullRequestComments(org, repo string, number int) ([]Comment, error)
-	ClosePullRequest(org, repo string, number int) error
-	ListPullRequestCommits(org, repo string, number int) ([]Commit, error)
+	GetPullRequests(owner, repo string) ([]PullRequest, error)
+	GetPullRequest(owner, repo string, number int) (*PullRequest, error)
+	GetPullRequestChanges(owner, repo string, number int) ([]PullRequestChange, error)
+	GetPullRequestPatch(owner, repo string, number int) ([]byte, error)
+	CreatePullRequest(owner, repo, title, body, head, base string) (int, error)
+	ListPullRequestComments(owner, repo string, number int) ([]Comment, error)
+	ClosePullRequest(owner, repo string, number int) error
+	ListPullRequestCommits(owner, repo string, number int) ([]Commit, error)
 }
 
 // RepositoryClient interface for repository related API actions
 type RepositoryClient interface {
-	GetBranches(org, repo string, onlyProtected bool) ([]Branch, error)
-	CreateBranch(org, repo, branch, ref string) error
-	GetFile(org, repo, filepath, commit string) ([]byte, error)
+	GetBranches(owner, repo string, onlyProtected bool) ([]Branch, error)
+	CreateBranch(owner, repo, branch, ref string) error
+	GetFile(owner, repo, filepath, commit string) ([]byte, error)
 }
 
 // Client interface for Gitee API
@@ -46,10 +46,10 @@ type client struct {
 	context  context.Context
 }
 
-func (c *client) GetBranches(org, repo string, onlyProtected bool) ([]Branch, error) {
-	logrus.Infoln("GetBranches", org, repo, onlyProtected)
+func (c *client) GetBranches(owner, repo string, onlyProtected bool) ([]Branch, error) {
+	logrus.Infoln("GetBranches", owner, repo, onlyProtected)
 	opts := &giteeapi.GetV5ReposOwnerRepoBranchesOpts{}
-	branches_, _, err := c.giteeAPI.RepositoriesApi.GetV5ReposOwnerRepoBranches(c.context, org, repo, opts)
+	branches_, _, err := c.giteeAPI.RepositoriesApi.GetV5ReposOwnerRepoBranches(c.context, owner, repo, opts)
 	if err != nil {
 		return nil, err
 	}
@@ -66,46 +66,46 @@ func (c *client) GetBranches(org, repo string, onlyProtected bool) ([]Branch, er
 	return branches, nil
 }
 
-func (c *client) CreateBranch(org, repo, branchName, ref string) error {
+func (c *client) CreateBranch(owner, repo, branchName, ref string) error {
 	param := giteeapi.CreateBranchParam{
 		Refs:       ref,
 		BranchName: branchName,
 	}
-	_, _, err := c.giteeAPI.RepositoriesApi.PostV5ReposOwnerRepoBranches(c.context, org, repo, param)
+	_, _, err := c.giteeAPI.RepositoriesApi.PostV5ReposOwnerRepoBranches(c.context, owner, repo, param)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (c *client) GetFile(org, repo, filepath, commit string) ([]byte, error) {
+func (c *client) GetFile(owner, repo, filepath, commit string) ([]byte, error) {
 	panic("implement me")
 }
 
-func (c *client) GetPullRequests(org, repo string) ([]PullRequest, error) {
+func (c *client) GetPullRequests(owner, repo string) ([]PullRequest, error) {
 	panic("implement me")
 }
 
-func (c *client) GetPullRequest(org, repo string, number int) (*PullRequest, error) {
+func (c *client) GetPullRequest(owner, repo string, number int) (*PullRequest, error) {
 	panic("implement me")
 }
 
-func (c *client) GetPullRequestChanges(org, repo string, number int) ([]PullRequestChange, error) {
+func (c *client) GetPullRequestChanges(owner, repo string, number int) ([]PullRequestChange, error) {
 	panic("implement me")
 }
 
-func (c *client) GetPullRequestPatch(org, repo string, number int) ([]byte, error) {
+func (c *client) GetPullRequestPatch(owner, repo string, number int) ([]byte, error) {
 	panic("implement me")
 }
 
-func (c *client) CreatePullRequest(org, repo, title, body, head, base string) (int, error) {
+func (c *client) CreatePullRequest(owner, repo, title, body, head, base string) (int, error) {
 	param := giteeapi.CreatePullRequestParam{
 		Title: title,
 		Body:  body,
 		Head:  head,
 		Base:  base,
 	}
-	pullRequest, _, err := c.giteeAPI.PullRequestsApi.PostV5ReposOwnerRepoPulls(c.context, org, repo, param)
+	pullRequest, _, err := c.giteeAPI.PullRequestsApi.PostV5ReposOwnerRepoPulls(c.context, owner, repo, param)
 	if err != nil {
 		logrus.Errorln("CreatePullRequest failed.")
 		return -1, err
@@ -114,9 +114,9 @@ func (c *client) CreatePullRequest(org, repo, title, body, head, base string) (i
 	return number, nil
 }
 
-func (c *client) ListPullRequestComments(org, repo string, number int) ([]Comment, error) {
+func (c *client) ListPullRequestComments(owner, repo string, number int) ([]Comment, error) {
 	opts := &giteeapi.GetV5ReposOwnerRepoPullsNumberCommentsOpts{}
-	result, _, err := c.giteeAPI.PullRequestsApi.GetV5ReposOwnerRepoPullsNumberComments(c.context, org, repo, int32(number), opts)
+	result, _, err := c.giteeAPI.PullRequestsApi.GetV5ReposOwnerRepoPullsNumberComments(c.context, owner, repo, int32(number), opts)
 	if err != nil {
 		return nil, err
 	}
@@ -132,21 +132,21 @@ func (c *client) ListPullRequestComments(org, repo string, number int) ([]Commen
 	return comments, nil
 }
 
-func (c *client) ClosePullRequest(org, repo string, number int) error {
+func (c *client) ClosePullRequest(owner, repo string, number int) error {
 	panic("implement me")
 }
 
-func (c *client) CreateComment(org, repo string, number int, comment string) error {
+func (c *client) CreateComment(owner, repo string, number int, comment string) error {
 	body := giteeapi.PullRequestCommentPostParam{
 		Body: comment,
 	}
-	_, _, err := c.giteeAPI.PullRequestsApi.PostV5ReposOwnerRepoPullsNumberComments(c.context, org, repo, int32(number), body)
+	_, _, err := c.giteeAPI.PullRequestsApi.PostV5ReposOwnerRepoPullsNumberComments(c.context, owner, repo, int32(number), body)
 	return err
 }
 
-func (c *client) ListPullRequestCommits(org, repo string, number int) ([]Commit, error) {
+func (c *client) ListPullRequestCommits(owner, repo string, number int) ([]Commit, error) {
 	opts := &giteeapi.GetV5ReposOwnerRepoPullsNumberCommitsOpts{}
-	commits_, _, err := c.giteeAPI.PullRequestsApi.GetV5ReposOwnerRepoPullsNumberCommits(c.context, org, repo, int32(number), opts)
+	commits_, _, err := c.giteeAPI.PullRequestsApi.GetV5ReposOwnerRepoPullsNumberCommits(c.context, owner, repo, int32(number), opts)
 
 	commits := make([]Commit, 0)
 	if err != nil {
