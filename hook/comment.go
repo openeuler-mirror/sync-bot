@@ -8,8 +8,6 @@ import (
 	"github.com/sirupsen/logrus"
 
 	"sync-bot/gitee"
-	"sync-bot/gitee/event/action"
-	"sync-bot/gitee/event/notable_type"
 )
 
 const (
@@ -96,7 +94,7 @@ func (s *Server) replySync(owner string, repo string, number int, url string, us
 		comment := fmt.Sprintf("Receive comment look like /sync command, but parse failed: %v", err)
 		err = s.GiteeClient.CreateComment(owner, repo, number, comment)
 		if err != nil {
-			logrus.Errorln("Create Comment failed:", err)
+			logrus.Errorln("Create NotableTypeComment failed:", err)
 		}
 		return
 	}
@@ -169,9 +167,9 @@ func (s *Server) CommentPullRequest(e gitee.CommentPullRequestEvent) {
 
 func (s *Server) HandleNoteEvent(e gitee.CommentPullRequestEvent) {
 	switch e.Action {
-	case action.Comment:
+	case gitee.ActionComment:
 		switch e.NotableType {
-		case notable_type.PullRequest:
+		case gitee.NotableTypePullRequest:
 			s.CommentPullRequest(e)
 		default:
 			logrus.Println("Ignoring unhandled notable type:", e.NotableType)

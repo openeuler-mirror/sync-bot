@@ -4,7 +4,6 @@ import (
 	"github.com/sirupsen/logrus"
 
 	"sync-bot/gitee"
-	"sync-bot/gitee/event/action"
 )
 
 func (s *Server) OpenPullRequest(e gitee.PullRequestEvent) {
@@ -42,11 +41,11 @@ func (s *Server) ClosePullRequest(e gitee.PullRequestEvent) {
 
 func (s *Server) HandlePullRequestEvent(e gitee.PullRequestEvent) {
 	switch e.Action {
-	case action.Open:
+	case gitee.ActionOpen:
 		s.OpenPullRequest(e)
-	case action.Merge:
+	case gitee.ActionMerge:
 		s.MergePullRequest(e)
-	case action.Close:
+	case gitee.ActionClose:
 		s.ClosePullRequest(e)
 	default:
 		logrus.Infoln("Ignoring unhandled action:", e.Action)
