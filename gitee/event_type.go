@@ -1,4 +1,4 @@
-package event
+package gitee
 
 // Event Type
 const (

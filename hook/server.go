@@ -11,7 +11,6 @@ import (
 	"github.com/sirupsen/logrus"
 
 	"sync-bot/gitee"
-	"sync-bot/gitee/event"
 )
 
 type Server struct {
@@ -23,13 +22,13 @@ type Server struct {
 
 func (s *Server) demuxEvent(eventType string, payload []byte, h http.Header) error {
 	switch eventType {
-	case event.MergeRequestHook:
+	case gitee.MergeRequestHook:
 		var e gitee.PullRequestEvent
 		if err := json.Unmarshal(payload, &e); err != nil {
 			return err
 		}
 		go s.HandlePullRequestEvent(e)
-	case event.NoteHook:
+	case gitee.NoteHook:
 		var e gitee.CommentPullRequestEvent
 		if err := json.Unmarshal(payload, &e); err != nil {
 			return err
@@ -97,11 +96,11 @@ func ValidateWebhook(req *restful.Request, resp *restful.Response) (string, bool
 	}
 	//
 	switch eventType {
-	case event.PushHook:
-	case event.TagPushHook:
-	case event.IssueHook:
-	case event.MergeRequestHook:
-	case event.NoteHook:
+	case gitee.PushHook:
+	case gitee.TagPushHook:
+	case gitee.IssueHook:
+	case gitee.MergeRequestHook:
+	case gitee.NoteHook:
 	default:
 		_, _ = resp.Write([]byte("invalid event type"))
 		return "", isPingEvent, []byte{}, errors.New("invalid event type")
