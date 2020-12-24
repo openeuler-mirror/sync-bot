@@ -1,4 +1,4 @@
-POST http://localhost:1234/hook
+POST http://localhost:8765/hook
 Content-Type: application/json
 Accept: application/json
 X-Gitee-Event: Merge Request Hook
