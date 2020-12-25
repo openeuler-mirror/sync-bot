@@ -2,9 +2,9 @@ package gitee
 
 import (
 	"context"
+	"errors"
 
 	giteeapi "gitee.com/openeuler/go-gitee/gitee"
-	"github.com/sirupsen/logrus"
 	"golang.org/x/oauth2"
 )
 
@@ -39,7 +39,7 @@ type Client interface {
 	RepositoryClient
 }
 
-// client
+// client Gitee API implementation
 type client struct {
 	token    func() []byte
 	giteeAPI *giteeapi.APIClient
@@ -47,14 +47,13 @@ type client struct {
 }
 
 func (c *client) GetBranches(owner, repo string, onlyProtected bool) ([]Branch, error) {
-	logrus.Infoln("GetBranches", owner, repo, onlyProtected)
 	opts := &giteeapi.GetV5ReposOwnerRepoBranchesOpts{}
-	branches_, _, err := c.giteeAPI.RepositoriesApi.GetV5ReposOwnerRepoBranches(c.context, owner, repo, opts)
+	bs, _, err := c.giteeAPI.RepositoriesApi.GetV5ReposOwnerRepoBranches(c.context, owner, repo, opts)
 	if err != nil {
 		return nil, err
 	}
 	branches := make([]Branch, 0)
-	for _, branch := range branches_ {
+	for _, branch := range bs {
 		if onlyProtected && !branch.Protected {
 			continue
 		}
@@ -71,9 +70,10 @@ func (c *client) CreateBranch(owner, repo, branchName, ref string) error {
 		Refs:       ref,
 		BranchName: branchName,
 	}
+
 	_, _, err := c.giteeAPI.RepositoriesApi.PostV5ReposOwnerRepoBranches(c.context, owner, repo, param)
 	if err != nil {
-		return err
+		return errors.New(string(err.(giteeapi.GenericSwaggerError).Body()))
 	}
 	return nil
 }
@@ -107,8 +107,7 @@ func (c *client) CreatePullRequest(owner, repo, title, body, head, base string) 
 	}
 	pullRequest, _, err := c.giteeAPI.PullRequestsApi.PostV5ReposOwnerRepoPulls(c.context, owner, repo, param)
 	if err != nil {
-		logrus.Errorln("CreatePullRequest failed.")
-		return -1, err
+		return -1, errors.New(string(err.(giteeapi.GenericSwaggerError).Body()))
 	}
 	number := int(pullRequest.Id)
 	return number, nil
@@ -146,16 +145,16 @@ func (c *client) CreateComment(owner, repo string, number int, comment string) e
 
 func (c *client) ListPullRequestCommits(owner, repo string, number int) ([]Commit, error) {
 	opts := &giteeapi.GetV5ReposOwnerRepoPullsNumberCommitsOpts{}
-	commits_, _, err := c.giteeAPI.PullRequestsApi.GetV5ReposOwnerRepoPullsNumberCommits(c.context, owner, repo, int32(number), opts)
+	cs, _, err := c.giteeAPI.PullRequestsApi.GetV5ReposOwnerRepoPullsNumberCommits(c.context, owner, repo, int32(number), opts)
 
 	commits := make([]Commit, 0)
 	if err != nil {
 		return nil, err
 	}
-	for _, c := range commits_ {
-		commit := Commit{Url: c.Url,
+	for _, c := range cs {
+		commit := Commit{URL: c.Url,
 			Sha:     c.Sha,
-			HtmlUrl: c.HtmlUrl,
+			HTMLURL: c.HtmlUrl,
 			Message: c.Commit.Message,
 		}
 		commits = append(commits, commit)
@@ -163,6 +162,7 @@ func (c *client) ListPullRequestCommits(owner, repo string, number int) ([]Commi
 	return commits, nil
 }
 
+//NewClient client to access Gitee
 func NewClient(getToken func() []byte) Client {
 	// oauth
 	oauthSecret := string(getToken())
