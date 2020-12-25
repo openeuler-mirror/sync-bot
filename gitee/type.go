@@ -127,8 +127,8 @@ type PullRequestEvent struct {
 }
 
 type Commit struct {
-	Url     string `json:"url"`
+	URL     string `json:"url"`
 	Sha     string `json:"sha"`
-	HtmlUrl string `json:"html_url"`
+	HTMLURL string `json:"html_url"`
 	Message string `json:"message"`
 }
