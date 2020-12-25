@@ -109,7 +109,7 @@ func (c *client) CreatePullRequest(owner, repo, title, body, head, base string) 
 	if err != nil {
 		return -1, errors.New(string(err.(giteeapi.GenericSwaggerError).Body()))
 	}
-	number := int(pullRequest.Id)
+	number := int(pullRequest.Number)
 	return number, nil
 }
 

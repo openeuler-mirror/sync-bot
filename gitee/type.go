@@ -104,6 +104,7 @@ type PullRequest struct {
 	HTMLURL            string            `json:"html_url"`
 	ID                 int               `json:"id"`
 	Labels             []Label           `json:"labels"`
+	MergeCommitSha     string            `json:"merge_commit_sha"`
 	MergeReferenceName string            `json:"merge_reference_name"`
 	MergeStatus        string            `json:"merge_status"`
 	Mergeable          bool              `json:"mergeable"`
