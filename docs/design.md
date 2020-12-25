@@ -223,19 +223,16 @@ __1. /sync-check__
 
 sync-bot service 回复内容如下：
 
-| Branch | Version | Release | Compare View |
-| --- | -- | -- | -- |
-| HEAD | 1.2.3 | 8 | |
-| * master | 1.2.3 | 7 | |
-| release | 1.2.0 | 4 | |
+This repository has the following protected branches:
 
-You can comment `/sync (--merge|--overwrite) <branch>... [--ignore <file>...]` to sync current modification to ___\<branch>___.
-Please refer to [doc]() for full help.
+| Protected Branch | Version | Release |
+|---|---|---|
+|[branch1](https://gitee.com/open-euler/syncbot-example/tree/branch1)|
+|[branch2](https://gitee.com/open-euler/syncbot-example/tree/branch2)|
 
-> HEAD 指当前 PR 的临时分支
-> *前缀的分支表示当前 PR 的目标分支
-
-> Gitee Compare View 当前不支持跨 fork 仓库之间分支对比，后续如果支持，可以将分支间的对比链接放置在 Compare View 列。
+Use `/sync <branch>` command to register the branch that the current PR changes will synchronize to.
+Once the current PR is merged, the synchronization operation will be performed.
+(Only the last comment which include valid /sync command will be processed.)
 
 
 __2. /sync__
