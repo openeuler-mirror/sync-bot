@@ -107,7 +107,7 @@ func (c *client) CreatePullRequest(owner, repo, title, body, head, base string) 
 	}
 	pullRequest, _, err := c.giteeAPI.PullRequestsApi.PostV5ReposOwnerRepoPulls(c.context, owner, repo, param)
 	if err != nil {
-		return -1, errors.New(string(err.(giteeapi.GenericSwaggerError).Body()))
+		return 0, errors.New(string(err.(giteeapi.GenericSwaggerError).Body()))
 	}
 	number := int(pullRequest.Number)
 	return number, nil
