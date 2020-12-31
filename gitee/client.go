@@ -19,7 +19,7 @@ type PullRequestClient interface {
 	GetPullRequest(owner, repo string, number int) (*PullRequest, error)
 	GetPullRequestChanges(owner, repo string, number int) ([]PullRequestChange, error)
 	GetPullRequestPatch(owner, repo string, number int) ([]byte, error)
-	CreatePullRequest(owner, repo, title, body, head, base string) (int, error)
+	CreatePullRequest(owner, repo, title, body, head, base string, pruneSourceBranch bool) (int, error)
 	ListPullRequestComments(owner, repo string, number int) ([]Comment, error)
 	ClosePullRequest(owner, repo string, number int) error
 	ListPullRequestCommits(owner, repo string, number int) ([]Commit, error)
@@ -98,12 +98,13 @@ func (c *client) GetPullRequestPatch(owner, repo string, number int) ([]byte, er
 	panic("implement me")
 }
 
-func (c *client) CreatePullRequest(owner, repo, title, body, head, base string) (int, error) {
+func (c *client) CreatePullRequest(owner, repo, title, body, head, base string, pruneSourceBranch bool) (int, error) {
 	param := giteeapi.CreatePullRequestParam{
-		Title: title,
-		Body:  body,
-		Head:  head,
-		Base:  base,
+		Title:             title,
+		Body:              body,
+		Head:              head,
+		Base:              base,
+		PruneSourceBranch: pruneSourceBranch,
 	}
 	pullRequest, _, err := c.giteeAPI.PullRequestsApi.PostV5ReposOwnerRepoPulls(c.context, owner, repo, param)
 	if err != nil {
@@ -168,7 +169,7 @@ func NewClient(getToken func() []byte) Client {
 	oauthSecret := string(getToken())
 	ctx := context.Background()
 	ts := oauth2.StaticTokenSource(
-		&oauth2.Token{AccessToken: string(oauthSecret)},
+		&oauth2.Token{AccessToken: oauthSecret},
 	)
 	// configuration
 	giteeConf := giteeapi.NewConfiguration()

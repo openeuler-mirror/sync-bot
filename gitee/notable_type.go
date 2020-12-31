@@ -2,8 +2,8 @@ package gitee
 
 // notable_type
 const (
-	NotableTypeComment     = "NotableTypeComment" // NotableTypeComment for Repository
-	NotableTypeCommit      = "NotableTypeCommit"
-	NotableTypeIssue       = "NotableTypeIssue"
-	NotableTypePullRequest = "NotableTypePullRequest"
+	NotableTypeComment     = "Comment" // Comment for Repository
+	NotableTypeCommit      = "Commit"
+	NotableTypeIssue       = "Issue"
+	NotableTypePullRequest = "PullRequest"
 )
