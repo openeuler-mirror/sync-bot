@@ -22,7 +22,7 @@ type PullRequestClient interface {
 	CreatePullRequest(owner, repo, title, body, head, base string) (int, error)
 	ListPullRequestComments(owner, repo string, number int) ([]Comment, error)
 	ClosePullRequest(owner, repo string, number int) error
-	ListPullRequestCommits(owner, repo string, number int) ([]Commit, error)
+	ListPullRequestCommits(owner, repo string, number int) ([]PullRequestCommit, error)
 }
 
 // RepositoryClient interface for repository related API actions
@@ -143,19 +143,53 @@ func (c *client) CreateComment(owner, repo string, number int, comment string) e
 	return err
 }
 
-func (c *client) ListPullRequestCommits(owner, repo string, number int) ([]Commit, error) {
+func (c *client) ListPullRequestCommits(owner, repo string, number int) ([]PullRequestCommit, error) {
 	opts := &giteeapi.GetV5ReposOwnerRepoPullsNumberCommitsOpts{}
 	cs, _, err := c.giteeAPI.PullRequestsApi.GetV5ReposOwnerRepoPullsNumberCommits(c.context, owner, repo, int32(number), opts)
 
-	commits := make([]Commit, 0)
+	var commits []PullRequestCommit
 	if err != nil {
 		return nil, err
 	}
 	for _, c := range cs {
-		commit := Commit{URL: c.Url,
-			Sha:     c.Sha,
+		commit := PullRequestCommit{
+			Author: User{
+				Email:    c.Author.Email,
+				HTMLURL:  c.Author.HtmlUrl,
+				ID:       int(c.Author.Id),
+				Name:     c.Author.Name,
+				Username: c.Author.Login,
+			},
+			CommentsURL: c.CommentsUrl,
+			Commit: GitCommit{
+				Author: GitUser{
+					Date:  c.Commit.Author.Date,
+					Email: c.Commit.Author.Email,
+					Name:  c.Commit.Author.Name,
+				},
+				CommentCount: int(c.Commit.CommentCount),
+				Committer: GitUser{
+					Date:  c.Commit.Committer.Date,
+					Email: c.Commit.Committer.Email,
+					Name:  c.Commit.Committer.Name,
+				},
+				Message: c.Commit.Message,
+				URL:     c.Commit.Url,
+			},
+			Committer: User{
+				Email:    c.Committer.Email,
+				HTMLURL:  c.Committer.HtmlUrl,
+				ID:       int(c.Committer.Id),
+				Name:     c.Committer.Name,
+				Username: c.Committer.Login,
+			},
 			HTMLURL: c.HtmlUrl,
-			Message: c.Commit.Message,
+			Parents: Parents{
+				Sha: c.Parents.Sha,
+				URL: c.Parents.Url,
+			},
+			URL: c.Url,
+			Sha: c.Sha,
 		}
 		commits = append(commits, commit)
 	}

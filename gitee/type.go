@@ -127,9 +127,32 @@ type PullRequestEvent struct {
 	Repository  Repository  `json:"repository"`
 }
 
-type Commit struct {
-	URL     string `json:"url"`
-	Sha     string `json:"sha"`
-	HTMLURL string `json:"html_url"`
-	Message string `json:"message"`
+type GitUser struct {
+	Name  string    `json:"name"`
+	Email string    `json:"email"`
+	Date  time.Time `json:"date"`
+}
+
+type GitCommit struct {
+	Author       GitUser `json:"author"`
+	CommentCount int     `json:"comment_count"`
+	Committer    GitUser `json:"committer"`
+	Message      string  `json:"message"`
+	URL          string  `json:"url"`
+}
+
+type Parents struct {
+	Sha string `json:"sha"`
+	URL string `json:"url"`
+}
+
+type PullRequestCommit struct {
+	Author      User      `json:"author"`
+	CommentsURL string    `json:"comments_url"`
+	Commit      GitCommit `json:"commit"`
+	Committer   User      `json:"committer"`
+	HTMLURL     string    `json:"html_url"`
+	Parents     Parents   `json:"parents"` // Gitee API only include the first parent
+	Sha         string    `json:"sha"`
+	URL         string    `json:"url"`
 }
