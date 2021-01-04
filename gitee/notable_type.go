@@ -1,6 +1,9 @@
 package gitee
 
-// notable_type
+// NotableType which object the note for
+type NotableType string
+
+// NotableType enum
 const (
 	NotableTypeComment     = "Comment" // Comment for Repository
 	NotableTypeCommit      = "Commit"

@@ -21,13 +21,6 @@ func Test_matchTitle(t *testing.T) {
 			true,
 		},
 		{
-			"match_with_whitespace",
-			args{
-				" [sync-bot] title with preceding whitespace character and a specific prefix",
-			},
-			true,
-		},
-		{
 			"not_match",
 			args{
 				"normal title",

@@ -6,30 +6,33 @@ import (
 	"strings"
 )
 
+// Strategy strategy of sync
 type Strategy int
 
-// sync strategy
+// three types strategy
 const (
 	Pick Strategy = iota
 	Merge
 	Overwrite
 )
 
-type SyncOption struct {
+// SyncCmdOption /sync command option
+type SyncCmdOption struct {
 	strategy Strategy
 	branches []string
 }
 
-func parse(cmd string) (SyncOption, error) {
-	var opt SyncOption
+func parse(command string) (SyncCmdOption, error) {
+	var opt SyncCmdOption
 	f := flag.NewFlagSet("/sync", flag.ContinueOnError)
 	sep := regexp.MustCompile("[ \t]+")
-	str := sep.Split(strings.TrimSpace(cmd), -1)
+	str := sep.Split(strings.TrimSpace(command), -1)
 	err := f.Parse(str[1:])
 	if err != nil {
 		return opt, err
 	}
-	opt.strategy = Pick
+	// Todo: default is Merge now, will change to Pick
+	opt.strategy = Merge
 	opt.branches = append(opt.branches, f.Args()...)
 	return opt, nil
 }

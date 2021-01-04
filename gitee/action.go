@@ -1,6 +1,9 @@
 package gitee
 
-// Action
+// Action action of pull request or issue
+type Action string
+
+// Action enum
 const (
 	ActionApproved    = "approved"
 	ActionAssign      = "assign"
@@ -19,9 +22,9 @@ const (
 	ActionUpdate      = "update"
 )
 
-// Action Desc
-const (
-	SourceBranchChanged = "source_branch_changed"
-	targetBranchChanged = "target_branch_changed"
-	UpdateLabel         = "update_label"
-)
+//// Action Desc
+//const (
+//	SourceBranchChanged = "source_branch_changed"
+//	targetBranchChanged = "target_branch_changed"
+//	UpdateLabel         = "update_label"
+//)
