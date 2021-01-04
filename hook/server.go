@@ -35,7 +35,7 @@ func (s *Server) demuxEvent(eventType string, payload []byte, h http.Header) err
 		}
 		go s.HandleNoteEvent(e)
 	default:
-		logrus.Println("Ignoring unhandled event type:", eventType)
+		logrus.Infoln("Ignoring unhandled event type:", eventType)
 	}
 	return nil
 }
@@ -43,7 +43,7 @@ func (s *Server) demuxEvent(eventType string, payload []byte, h http.Header) err
 func (s *Server) hook(req *restful.Request, resp *restful.Response) {
 	eventType, isPingEvent, payload, err := ValidateWebhook(req, resp)
 	if err != nil {
-		logrus.Println(err)
+		logrus.Errorln(err)
 		return
 	}
 
@@ -54,7 +54,7 @@ func (s *Server) hook(req *restful.Request, resp *restful.Response) {
 	}
 
 	if isPingEvent {
-		logrus.Println("Receive the Ping Event")
+		logrus.Infoln("Receive the Ping Event:", eventType)
 		return
 	}
 
