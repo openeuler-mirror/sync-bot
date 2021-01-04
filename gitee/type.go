@@ -156,3 +156,13 @@ type PullRequestCommit struct {
 	Sha         string    `json:"sha"`
 	URL         string    `json:"url"`
 }
+
+type Issue struct {
+	Body      string `json:"body"`
+	HTMLURL   string `json:"html_url"`
+	ID        int    `json:"id"`
+	IssueType string `json:"issue_type"`
+	Number    string `json:"number"`
+	State     string `json:"state"`
+	Title     string `json:"title"`
+}

@@ -23,6 +23,7 @@ type PullRequestClient interface {
 	ListPullRequestComments(owner, repo string, number int) ([]Comment, error)
 	ClosePullRequest(owner, repo string, number int) error
 	ListPullRequestCommits(owner, repo string, number int) ([]PullRequestCommit, error)
+	ListPullRequestIssues(owner, repo string, number int) ([]Issue, error)
 }
 
 // RepositoryClient interface for repository related API actions
@@ -195,6 +196,28 @@ func (c *client) ListPullRequestCommits(owner, repo string, number int) ([]PullR
 		commits = append(commits, commit)
 	}
 	return commits, nil
+}
+
+func (c *client) ListPullRequestIssues(owner, repo string, number int) ([]Issue, error) {
+	opts := &giteeapi.GetV5ReposOwnerRepoPullsNumberIssuesOpts{}
+	is, _, err := c.giteeAPI.PullRequestsApi.GetV5ReposOwnerRepoPullsNumberIssues(c.context, owner, repo, int32(number), opts)
+	var issues []Issue
+	if err != nil {
+		return nil, err
+	}
+	for _, i := range is {
+		issue := Issue{
+			Body:      i.Body,
+			HTMLURL:   i.HtmlUrl,
+			ID:        int(i.Id),
+			IssueType: i.IssueType,
+			Number:    i.Number,
+			State:     i.State,
+			Title:     i.Title,
+		}
+		issues = append(issues, issue)
+	}
+	return issues, nil
 }
 
 //NewClient client to access Gitee
