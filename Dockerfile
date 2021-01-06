@@ -13,7 +13,7 @@ RUN go build -o /sync-bot
 # Final stage
 FROM centos:8
 
-EXPOSE 1234
+EXPOSE 8765
 
 WORKDIR /
 

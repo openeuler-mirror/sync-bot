@@ -5,8 +5,9 @@ import (
 )
 
 var (
-	titleRegex = regexp.MustCompile(`^\s*\[sync-bot\]`)
-
+	// title start with [sync-bot]
+	titleRegex = regexp.MustCompile(`^\[sync-bot\]`)
+	// just /sync-check
 	syncCheckRegex = regexp.MustCompile(`(?m)^/sync-check\s*$`)
 	// like "/sync --merge --ignore x.spec make_build branch-1.0"
 	syncRegex = regexp.MustCompile(`(?m)^/sync(\s+(?:(?:-{1,2}[\w_-]+)|[\w./_-]+)+)+\s*$`)

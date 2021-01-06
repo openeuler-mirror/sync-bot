@@ -12,7 +12,7 @@ func Test_parse(t *testing.T) {
 	tests := []struct {
 		name    string
 		args    args
-		want    SyncOption
+		want    SyncCmdOption
 		wantErr bool
 	}{
 		{
@@ -20,8 +20,8 @@ func Test_parse(t *testing.T) {
 			args: args{
 				"/sync",
 			},
-			want: SyncOption{
-				strategy: Pick,
+			want: SyncCmdOption{
+				strategy: Merge,
 				branches: nil,
 			},
 			wantErr: false,
@@ -32,8 +32,8 @@ func Test_parse(t *testing.T) {
 			args: args{
 				"/sync branch1",
 			},
-			want: SyncOption{
-				strategy: Pick,
+			want: SyncCmdOption{
+				strategy: Merge,
 				branches: []string{"branch1"},
 			},
 			wantErr: false,
@@ -43,8 +43,8 @@ func Test_parse(t *testing.T) {
 			args: args{
 				"/sync branch1 branch2",
 			},
-			want: SyncOption{
-				strategy: Pick,
+			want: SyncCmdOption{
+				strategy: Merge,
 				branches: []string{"branch1", "branch2"},
 			},
 			wantErr: false,
@@ -54,7 +54,7 @@ func Test_parse(t *testing.T) {
 			args: args{
 				"/sync --force --ignore \tx.spec openEuler-20.03-LTS make_build openEuler-20.09",
 			},
-			want:    SyncOption{},
+			want:    SyncCmdOption{},
 			wantErr: true,
 		},
 	}

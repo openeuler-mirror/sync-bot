@@ -1,6 +1,9 @@
 package gitee
 
-// Event Type
+// EventType hook event type
+type EventType string
+
+// EventType enum
 const (
 	PushHook         = "Push Hook"
 	TagPushHook      = "Tag Push Hook"

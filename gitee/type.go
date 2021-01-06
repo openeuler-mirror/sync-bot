@@ -64,7 +64,7 @@ type CommentPullRequestEvent struct {
 	Comment     Comment     `json:"comment"`
 	Enterprise  Enterprise  `json:"enterprise"`
 	HookName    string      `json:"hook_name"`
-	NotableType string      `json:"noteable_type"` // noteable_type NOT notable_type
+	NotableType NotableType `json:"noteable_type"` // noteable_type NOT notable_type
 	PullRequest PullRequest `json:"pull_request"`
 	Repository  Repository  `json:"repository"`
 	Timestamp   string      `json:"timestamp"`
@@ -111,7 +111,7 @@ type PullRequest struct {
 	Merged             bool              `json:"merged"`
 	Number             int               `json:"number"`
 	PatchURL           string            `json:"patch_url"`
-	State              string            `json:"state"`
+	State              State             `json:"state"`
 	Title              string            `json:"title"`
 	UpdatedBy          User              `json:"updated_by"`
 	User               User              `json:"user"`
@@ -119,7 +119,7 @@ type PullRequest struct {
 
 // PullRequestEvent is what Gitee sends us when a PR is create/update/merge/close.
 type PullRequestEvent struct {
-	Action      string      `json:"action"`
+	Action      Action      `json:"action"`
 	ActionDesc  string      `json:"action_desc"`
 	Enterprise  Enterprise  `json:"enterprise"`
 	HookName    string      `json:"hook_name"`
