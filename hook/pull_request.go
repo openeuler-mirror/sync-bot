@@ -43,16 +43,21 @@ func (s *Server) MergePullRequest(e gitee.PullRequestEvent) {
 		logrus.Errorln("List PullRequest comments failed", err)
 		return
 	}
+	logrus.WithFields(logrus.Fields{
+		"comments": comments,
+	}).Infoln("Get all comments")
 
 	// find the last /sync command
-	for i := range comments {
+	for i, c := range comments {
 		comment := comments[len(comments)-1-i]
+		user := c.User.Username
+		url := c.HTMLURL
 		body := comment.Body
 		if matchSync(body) {
 			logrus.WithFields(logrus.Fields{
 				"comment": body,
 			}).Infoln("match /sync command")
-			s.sync(owner, repo, e.PullRequest, body)
+			_ = s.sync(owner, repo, e.PullRequest, user, url, body)
 			return
 		}
 	}
@@ -65,11 +70,20 @@ func (s *Server) pick() bool {
 	panic("implement me")
 }
 
-func (s *Server) merge(owner string, repo string, opt SyncCmdOption, pr gitee.PullRequest, title string, body string) bool {
+func (s *Server) merge(owner string, repo string, opt SyncCmdOption, branchSet map[string]bool, pr gitee.PullRequest, title string, body string) ([]syncStatus, error) {
 	number := pr.Number
 	ref := pr.Head.Sha
 
+	var status []syncStatus
 	for _, branch := range opt.branches {
+		// branch not in repository
+		if ok := branchSet[branch]; !ok {
+			status = append(status, syncStatus{
+				Name:   branch,
+				Status: branchNonExist,
+			})
+			continue
+		}
 		// create temp branch
 		tempBranch := fmt.Sprintf("sync-pr%v-to-%v", number, branch)
 		err := s.GiteeClient.CreateBranch(owner, repo, tempBranch, ref)
@@ -81,50 +95,67 @@ func (s *Server) merge(owner string, repo string, opt SyncCmdOption, pr gitee.Pu
 		} else {
 			logrus.Infoln("Create temp branch:", branch)
 		}
+		var url string
+		var st string
 		// create pull request
 		num, err := s.GiteeClient.CreatePullRequest(owner, repo, title, body, tempBranch, branch, true)
 		if err != nil {
 			logrus.Errorln("Create PullRequest failed:", err)
+			st = err.Error()
 		} else {
 			logrus.Infoln("Create PullRequest:", num)
+			st = "Create sync PR"
+			url = fmt.Sprintf("https://gitee.com/%v/%v/pulls/%v", owner, repo, num)
 		}
+		status = append(status, syncStatus{Name: branch, Status: st, PR: url})
 	}
-	return true
+	return status, nil
 }
 
 func (s *Server) overwrite() bool {
 	panic("implement me")
 }
 
-func (s *Server) sync(owner string, repo string, pr gitee.PullRequest, command string) bool {
+func (s *Server) sync(owner string, repo string, pr gitee.PullRequest, user string, url string, command string) error {
 	number := pr.Number
 
-	opt, err := parse(command)
+	opt, err := commandParse(command)
 	if err != nil {
 		logrus.WithFields(logrus.Fields{
 			"opt": opt,
 		}).Errorln("Parse /sync command failed:", err)
-		return false
+		return err
 	}
 
 	issues, err := s.GiteeClient.ListPullRequestIssues(owner, repo, number)
 	if err != nil {
 		logrus.Errorln("List issues in pull request failed:", err)
-		return false
+		return err
 	}
 
 	commits, err := s.GiteeClient.ListPullRequestCommits(owner, repo, number)
 	if err != nil {
 		logrus.Errorln("List commits failed:", err)
-		return false
+		return err
 	}
 	for i := range commits {
 		commits[i].Commit.Message = strings.ReplaceAll(commits[i].Commit.Message, "\n", "<br>")
 	}
 
+	// retrieve all branches
+	branches, err := s.GiteeClient.GetBranches(owner, repo, false)
+	if err != nil {
+		logrus.Errorln("List branches failed:", err)
+		return err
+	}
+	branchSet := make(map[string]bool)
+	for _, b := range branches {
+		branchSet[b.Name] = true
+	}
+
 	title := fmt.Sprintf("[sync-bot] from PR-%v: %v", number, pr.Title)
 
-	bodyStruct := struct {
+	data := struct {
 		PR      string
 		Issues  []gitee.Issue
 		Commits []gitee.PullRequestCommit
@@ -134,25 +165,62 @@ func (s *Server) sync(owner string, repo string, pr gitee.PullRequest, command s
 		Commits: commits,
 	}
 
-	body, err := executeTemplate(syncPRBodyTmpl, bodyStruct)
+	body, err := executeTemplate(syncPRBodyTmpl, data)
 	if err != nil {
 		logrus.WithFields(logrus.Fields{
-			"tmpl":       syncPRBodyTmpl,
-			"bodyStruct": bodyStruct,
+			"tmpl": syncPRBodyTmpl,
+			"data": data,
 		}).Errorln("Execute template failed:", err)
-		return false
+		return err
 	}
 
+	var status []syncStatus
 	switch opt.strategy {
 	case Pick:
-		return s.pick()
+		s.pick()
 	case Merge:
-		return s.merge(owner, repo, opt, pr, title, body)
+		status, _ = s.merge(owner, repo, opt, branchSet, pr, title, body)
 	case Overwrite:
-		return s.overwrite()
+		s.overwrite()
 	default:
 	}
-	return false
+
+	comment, err := executeTemplate(syncResultTmpl, struct {
+		URL        string
+		User       string
+		Command    string
+		SyncStatus []syncStatus
+	}{
+		URL:        url,
+		User:       user,
+		Command:    command,
+		SyncStatus: status,
+	})
+	if err != nil {
+		logrus.WithFields(logrus.Fields{
+			"tmpl": syncResultTmpl,
+			"data": data,
+		}).Errorln("Execute template failed:", err)
+		return err
+	}
+
+	err = s.GiteeClient.CreateComment(owner, repo, number, comment)
+	if err != nil {
+		logrus.WithFields(logrus.Fields{
+			"owner":   owner,
+			"repo":    repo,
+			"number":  number,
+			"comment": comment,
+		}).Errorln("Create comment failed:", err)
+	} else {
+		logrus.WithFields(logrus.Fields{
+			"owner":   owner,
+			"repo":    repo,
+			"number":  number,
+			"comment": comment,
+		}).Infoln("Reply sync.")
+	}
+	return err
 }
 
 func (s *Server) ClosePullRequest(e gitee.PullRequestEvent) {

@@ -60,13 +60,13 @@ func Test_parse(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := parse(tt.args.cmd)
+			got, err := commandParse(tt.args.cmd)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("parse() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("commandParse() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("parse() got = %v, want %v", got, tt.want)
+				t.Errorf("commandParse() got = %v, want %v", got, tt.want)
 			}
 		})
 	}
