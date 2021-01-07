@@ -22,7 +22,7 @@ type SyncCmdOption struct {
 	branches []string
 }
 
-func parse(command string) (SyncCmdOption, error) {
+func commandParse(command string) (SyncCmdOption, error) {
 	var opt SyncCmdOption
 	f := flag.NewFlagSet("/sync", flag.ContinueOnError)
 	sep := regexp.MustCompile("[ \t]+")

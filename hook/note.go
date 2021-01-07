@@ -13,7 +13,7 @@ func (s *Server) replySyncCheck(owner string, repo string, number int, targetBra
 	if err != nil {
 		logrus.WithFields(logrus.Fields{
 			"err": err,
-		}).Errorln("GetBranches failed")
+		}).Errorln("Get Branches failed")
 		return
 	}
 
@@ -64,38 +64,63 @@ func (s *Server) replySync(e gitee.CommentPullRequestEvent) {
 	user := e.Comment.User.Username
 	url := e.Comment.HTMLURL
 
-	opt, err := parse(comment)
+	opt, err := commandParse(comment)
 	if err != nil {
 		logrus.WithFields(logrus.Fields{
 			"opt": opt,
 		}).Errorln("Parse /sync command failed:", err)
-		comment := fmt.Sprintf("Receive comment look like /sync command, but parse failed: %v", err)
+		comment := fmt.Sprintf("Receive comment look like /sync command, but commandParse failed: %v", err)
+		logrus.Errorln(comment)
 		err = s.GiteeClient.CreateComment(owner, repo, number, comment)
 		if err != nil {
-			logrus.Errorln("Create NotableTypeComment failed:", err)
+			logrus.Errorln("Create Comment failed:", err)
 		}
 		return
 	}
 
-	// TODO: need to check if branch exist in repository
-	var branches []gitee.Branch
+	// retrieve all branches
+	allBranches, err := s.GiteeClient.GetBranches(owner, repo, false)
+	if err != nil {
+		comment := fmt.Sprintf("List branches failed: %v", err)
+		logrus.Errorln(comment)
+		err = s.GiteeClient.CreateComment(owner, repo, number, comment)
+		if err != nil {
+			logrus.Errorln("Create Comment failed:", err)
+		}
+		return
+	}
+	branchSet := make(map[string]bool)
+	for _, b := range allBranches {
+		branchSet[b.Name] = true
+	}
+
+	var synBranches []branchStatus
 	for _, b := range opt.branches {
-		branches = append(branches, gitee.Branch{
-			Name: b,
-		})
+		if ok := branchSet[b]; ok {
+			synBranches = append(synBranches, branchStatus{
+				Name:   b,
+				Status: branchExist,
+			})
+		} else {
+			synBranches = append(synBranches, branchStatus{
+				Name:   b,
+				Status: branchNonExist,
+			})
+		}
 	}
 
 	data := struct {
 		URL      string
 		Command  string
 		User     string
-		Branches []gitee.Branch
+		Branches []branchStatus
 	}{
 		URL:      url,
 		Command:  comment,
 		User:     user,
-		Branches: branches,
+		Branches: synBranches,
 	}
+
 	replyComment, err := executeTemplate(replySyncTmpl, data)
 	if err != nil {
 		logrus.WithFields(logrus.Fields{
@@ -127,6 +152,8 @@ func (s *Server) NotePullRequest(e gitee.CommentPullRequestEvent) {
 	repo := e.Repository.Path
 	number := e.PullRequest.Number
 	comment := e.Comment.Body
+	user := e.Comment.User.Username
+	url := e.Comment.HTMLURL
 	targetBranch := e.PullRequest.Base.Ref
 	state := e.PullRequest.State
 	logrus.WithFields(logrus.Fields{
@@ -134,6 +161,7 @@ func (s *Server) NotePullRequest(e gitee.CommentPullRequestEvent) {
 		"repo":    repo,
 		"number":  number,
 		"comment": comment,
+		"url":     url,
 	}).Infoln("NotePullRequest")
 
 	if matchSyncCheck(comment) {
@@ -144,10 +172,18 @@ func (s *Server) NotePullRequest(e gitee.CommentPullRequestEvent) {
 
 	if matchSync(comment) {
 		logrus.Infoln("Receive /sync command")
-		if state == gitee.StateOpen {
+		switch state {
+		case gitee.StateOpen:
+			logrus.Infoln("Pull request is open, just replay sync.")
 			s.replySync(e)
-		} else {
-			s.sync(owner, repo, e.PullRequest, comment)
+		case gitee.StateMerged:
+			logrus.Infoln("Pull request is merge, perform sync operation.")
+			_ = s.sync(owner, repo, e.PullRequest, user, url, comment)
+		default:
+			logrus.WithFields(logrus.Fields{
+				"comment": comment,
+				"state":   state,
+			}).Infoln("Ignoring unhandled pull request state.")
 		}
 		return
 	}

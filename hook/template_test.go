@@ -47,7 +47,7 @@ This repository has the following protected branches:
 |__* branch1__| | |
 |branch2| | |
 
-Use ` + "`/sync <branch>`" + ` command to register the branch that the current PR changes will synchronize to.
+Use ` + "`/sync <branch> ...`" + ` command to register the branch that the current PR changes will synchronize to.
 Once the current PR is merged, the synchronization operation will be performed.
 (Only the last comment which include valid /sync command will be processed.)
 `,
@@ -61,25 +61,35 @@ Once the current PR is merged, the synchronization operation will be performed.
 					URL      string
 					Command  string
 					User     string
-					Branches []gitee.Branch
+					Branches []branchStatus
 				}{
-					URL:     "https://example",
+					URL:     "https://example.com",
 					Command: "/sync hello",
 					User:    "me",
-					Branches: []gitee.Branch{
-						{Name: "branch1"},
-						{Name: "branch2"},
+					Branches: []branchStatus{
+						{
+							Name:   "branch1",
+							Status: branchExist,
+						},
+						{
+							Name:   "branch2",
+							Status: branchNonExist,
+						},
 					},
 				},
 			},
 			want: `
-In response to [this](https://example):
+In response to [this](https://example.com):
 > /sync hello
 
 @me
-Receive the synchronization command. The synchronization operation will be applied to the following branches, once the current PR is merged:
-__branch1__
-__branch2__
+Receive the synchronization command.
+Sync operation will be applied to the following branch(es), if the current PR is merged:
+
+| Branch | Status |
+|---|---|
+|branch1|sync operation will be performed|
+|branch2|branch not found, ignored|
 `,
 			wantErr: false,
 		},
@@ -143,6 +153,48 @@ http://example.com/issue3
 |---|---|---|
 |[12345678](http://example.com/commit1)|0000-01-02 03:04:05.000000006 +0000 UTC|commit1|
 |[12345678](http://example.com/commit1)|0000-01-02 03:04:05.000000006 +0000 UTC|commit1|
+`,
+			wantErr: false,
+		},
+		{
+			name: "syncResult",
+			args: args{
+				tmpl: syncResultTmpl,
+				data: struct {
+					URL        string
+					Command    string
+					User       string
+					SyncStatus []syncStatus
+				}{
+					URL:     "https://example.com",
+					Command: "/sync hello",
+					User:    "me",
+					SyncStatus: []syncStatus{
+						{
+							Name:   "branch1",
+							Status: branchNonExist,
+							PR:     "",
+						},
+						{
+							Name:   "hello",
+							Status: "Create pull request",
+							PR:     "https://example.com/pr/1",
+						},
+					},
+				},
+			},
+			want: `
+In response to [this](https://example.com):
+> /sync hello
+
+@me
+
+The following sync operations have been performed:
+
+| Branch | Status | Pull Request |
+|---|---|---|
+|branch1|branch not found, ignored||
+|hello|Create pull request|https://example.com/pr/1|
 `,
 			wantErr: false,
 		},

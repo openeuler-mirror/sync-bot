@@ -127,6 +127,13 @@ func (c *client) ListPullRequestComments(owner, repo string, number int) ([]Comm
 			Body:    c.Body,
 			HTMLURL: c.HtmlUrl,
 			ID:      int(c.Id),
+			User: User{
+				Email:    c.User.Email,
+				HTMLURL:  c.User.HtmlUrl,
+				ID:       int(c.User.Id),
+				Name:     c.User.Name,
+				Username: c.User.Login,
+			},
 		}
 		comments = append(comments, comment)
 	}
