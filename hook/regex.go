@@ -8,9 +8,9 @@ var (
 	// title start with [sync-bot]
 	titleRegex = regexp.MustCompile(`^\[sync-bot\]`)
 	// just /sync-check
-	syncCheckRegex = regexp.MustCompile(`(?m)^/sync-check\s*$`)
-	// like "/sync --merge --ignore x.spec make_build branch-1.0"
-	syncRegex = regexp.MustCompile(`(?m)^/sync(\s+(?:(?:-{1,2}[\w_-]+)|[\w./_-]+)+)+\s*$`)
+	syncCheckRegex = regexp.MustCompile(`^\s*/sync-check\s*$`)
+	// like "/sync new_branch branch-1.0 foo/bar"
+	syncRegex = regexp.MustCompile(`^\s*/sync([ \t]+[\w\./_-]+)+\s*$`)
 )
 
 // match Pull Request created by sync-bot

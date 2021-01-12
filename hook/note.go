@@ -64,12 +64,12 @@ func (s *Server) replySync(e gitee.CommentPullRequestEvent) {
 	user := e.Comment.User.Username
 	url := e.Comment.HTMLURL
 
-	opt, err := commandParse(comment)
+	opt, err := parseSyncCommand(comment)
 	if err != nil {
 		logrus.WithFields(logrus.Fields{
 			"opt": opt,
 		}).Errorln("Parse /sync command failed:", err)
-		comment := fmt.Sprintf("Receive comment look like /sync command, but commandParse failed: %v", err)
+		comment := fmt.Sprintf("Receive comment look like /sync command, but parseSyncCommand failed: %v", err)
 		logrus.Errorln(comment)
 		err = s.GiteeClient.CreateComment(owner, repo, number, comment)
 		if err != nil {

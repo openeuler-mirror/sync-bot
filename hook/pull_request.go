@@ -70,7 +70,7 @@ func (s *Server) pick() bool {
 	panic("implement me")
 }
 
-func (s *Server) merge(owner string, repo string, opt SyncCmdOption, branchSet map[string]bool, pr gitee.PullRequest, title string, body string) ([]syncStatus, error) {
+func (s *Server) merge(owner string, repo string, opt *SyncCmdOption, branchSet map[string]bool, pr gitee.PullRequest, title string, body string) ([]syncStatus, error) {
 	number := pr.Number
 	ref := pr.Head.Sha
 
@@ -119,7 +119,7 @@ func (s *Server) overwrite() bool {
 func (s *Server) sync(owner string, repo string, pr gitee.PullRequest, user string, url string, command string) error {
 	number := pr.Number
 
-	opt, err := commandParse(command)
+	opt, err := parseSyncCommand(command)
 	if err != nil {
 		logrus.WithFields(logrus.Fields{
 			"opt": opt,

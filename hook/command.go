@@ -22,17 +22,19 @@ type SyncCmdOption struct {
 	branches []string
 }
 
-func commandParse(command string) (SyncCmdOption, error) {
-	var opt SyncCmdOption
+func parseSyncCommand(command string) (*SyncCmdOption, error) {
 	f := flag.NewFlagSet("/sync", flag.ContinueOnError)
-	sep := regexp.MustCompile("[ \t]+")
-	str := sep.Split(strings.TrimSpace(command), -1)
+	sep := regexp.MustCompile(`[ \t]+`)
+	command = strings.TrimSpace(command)
+	str := sep.Split(command, -1)
 	err := f.Parse(str[1:])
 	if err != nil {
-		return opt, err
+		return nil, err
 	}
 	// Todo: default is Merge now, will change to Pick
-	opt.strategy = Merge
-	opt.branches = append(opt.branches, f.Args()...)
-	return opt, nil
+	branches := f.Args()
+	return &SyncCmdOption{
+		strategy: Merge,
+		branches: branches,
+	}, nil
 }
