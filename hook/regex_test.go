@@ -4,7 +4,7 @@ import (
 	"testing"
 )
 
-func Test_matchTitle(t *testing.T) {
+func TestMatchTitle(t *testing.T) {
 	type args struct {
 		title string
 	}
@@ -14,14 +14,14 @@ func Test_matchTitle(t *testing.T) {
 		want bool
 	}{
 		{
-			"match",
+			"exact match",
 			args{
 				"[sync-bot] title with a specific prefix",
 			},
 			true,
 		},
 		{
-			"not_match",
+			"not match",
 			args{
 				"normal title",
 			},
@@ -37,7 +37,7 @@ func Test_matchTitle(t *testing.T) {
 	}
 }
 
-func Test_matchSyc(t *testing.T) {
+func TestMatchSync(t *testing.T) {
 	type args struct {
 		content string
 	}
@@ -47,18 +47,46 @@ func Test_matchSyc(t *testing.T) {
 		want bool
 	}{
 		{
-			"match",
+			"one branch",
 			args{
 				"/sync branch1",
 			},
 			true,
 		},
 		{
-			"not_match",
+			"two branch",
+			args{
+				"/sync branch1 branch1",
+			},
+			true,
+		},
+		{
+			"special character branch name",
+			args{
+				"/sync foo.bar foo_bar foo-bar foo/bar",
+			},
+			true,
+		},
+		{
+			"no branch",
 			args{
 				"/sync",
 			},
 			false,
+		},
+		{
+			"middle newline",
+			args{
+				"/sync a\n/sync b",
+			},
+			false,
+		},
+		{
+			"multi-line",
+			args{
+				"\n\t /sync a b\n\t ",
+			},
+			true,
 		},
 	}
 	for _, tt := range tests {
@@ -70,7 +98,7 @@ func Test_matchSyc(t *testing.T) {
 	}
 }
 
-func Test_matchSyncCheck(t *testing.T) {
+func TestMatchSyncCheck(t *testing.T) {
 	type args struct {
 		content string
 	}
@@ -80,18 +108,32 @@ func Test_matchSyncCheck(t *testing.T) {
 		want bool
 	}{
 		{
-			"match",
+			"exact match",
 			args{
 				"/sync-check",
 			},
 			true,
 		},
 		{
-			"not_match",
+			"not match",
 			args{
 				"/sync-check-",
 			},
 			false,
+		},
+		{
+			"multi-line",
+			args{
+				"/sync-check\n",
+			},
+			true,
+		},
+		{
+			"include whitespace",
+			args{
+				" \t/sync-check \n ",
+			},
+			true,
 		},
 	}
 	for _, tt := range tests {
