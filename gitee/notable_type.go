@@ -5,8 +5,8 @@ type NotableType string
 
 // NotableType enum
 const (
-	NotableTypeComment     = "Comment" // Comment for Repository
-	NotableTypeCommit      = "Commit"
-	NotableTypeIssue       = "Issue"
-	NotableTypePullRequest = "PullRequest"
+	NotableTypeComment     NotableType = "Comment" // Comment for Repository
+	NotableTypeCommit      NotableType = "Commit"
+	NotableTypeIssue       NotableType = "Issue"
+	NotableTypePullRequest NotableType = "PullRequest"
 )

@@ -60,7 +60,7 @@ type Comment struct {
 
 // CommentPullRequestEvent is what Gitee sends us when a comment is create/edited/deleted.
 type CommentPullRequestEvent struct {
-	Action      string      `json:"action"`
+	Action      Action      `json:"action"`
 	Comment     Comment     `json:"comment"`
 	Enterprise  Enterprise  `json:"enterprise"`
 	HookName    string      `json:"hook_name"`
