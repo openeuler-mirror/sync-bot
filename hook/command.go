@@ -34,7 +34,7 @@ func parseSyncCommand(command string) (*SyncCmdOption, error) {
 	// Todo: default is Merge now, will change to Pick
 	branches := f.Args()
 	return &SyncCmdOption{
-		strategy: Merge,
+		strategy: Pick,
 		branches: branches,
 	}, nil
 }

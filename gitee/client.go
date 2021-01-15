@@ -29,6 +29,7 @@ type PullRequestClient interface {
 // RepositoryClient interface for repository related API actions
 type RepositoryClient interface {
 	GetBranches(owner, repo string, onlyProtected bool) ([]Branch, error)
+	GetBranch(owner, repo, branch string) (Branch, error)
 	CreateBranch(owner, repo, branch, ref string) error
 	GetFile(owner, repo, filepath, commit string) ([]byte, error)
 }
@@ -64,6 +65,19 @@ func (c *client) GetBranches(owner, repo string, onlyProtected bool) ([]Branch, 
 		})
 	}
 	return branches, nil
+}
+
+func (c *client) GetBranch(owner, repo, branch string) (Branch, error) {
+	var b Branch
+	opts := &giteeapi.GetV5ReposOwnerRepoBranchesBranchOpts{}
+	b1, _, err := c.giteeAPI.RepositoriesApi.GetV5ReposOwnerRepoBranchesBranch(c.context, owner, repo, branch, opts)
+	if err != nil {
+		return b, err
+	}
+	return Branch{
+		Name:      b1.Name,
+		Protected: b1.Protected,
+	}, nil
 }
 
 func (c *client) CreateBranch(owner, repo, branchName, ref string) error {
