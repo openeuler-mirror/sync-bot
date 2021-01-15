@@ -3,9 +3,11 @@ package hook
 import (
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/sirupsen/logrus"
 
+	"sync-bot/git"
 	"sync-bot/gitee"
 )
 
@@ -66,8 +68,94 @@ func (s *Server) MergePullRequest(e gitee.PullRequestEvent) {
 	}).Warnln("Not found valid /sync command in pr comments")
 }
 
-func (s *Server) pick() bool {
-	panic("implement me")
+func (s *Server) pick(owner string, repo string, opt *SyncCmdOption, branchSet map[string]bool, pr gitee.PullRequest,
+	title string, body string, firstSha string, lastSha string) ([]syncStatus, error) {
+	number := pr.Number
+	sourceBranch := pr.Head.Ref
+	r, err := s.GitClient.Clone(owner, repo)
+	if err != nil {
+		logrus.Errorf("Clone %s/%s failed: %v", owner, repo, err)
+		return nil, err
+	}
+
+	var status []syncStatus
+	for _, branch := range opt.branches {
+		// branch not in repository
+		if ok := branchSet[branch]; !ok {
+			status = append(status, syncStatus{
+				Name:   branch,
+				Status: branchNonExist,
+			})
+			continue
+		}
+		tempBranch := fmt.Sprintf("sync-pr%v-%v-to-%v", number, sourceBranch, branch)
+		err = r.Checkout("origin/" + branch)
+		if err != nil {
+			status = append(status, syncStatus{
+				Name:   branch,
+				Status: err.Error(),
+			})
+			continue
+		}
+		err = r.CheckoutNewBranch(tempBranch, true)
+		if err != nil {
+			status = append(status, syncStatus{
+				Name:   branch,
+				Status: err.Error(),
+			})
+			continue
+		}
+		err = r.FetchPullRequest(number)
+		if err != nil {
+			status = append(status, syncStatus{
+				Name:   branch,
+				Status: err.Error(),
+			})
+			continue
+		}
+		err = r.CherryPick(firstSha, lastSha, git.Ours)
+		if err != nil {
+			status = append(status, syncStatus{
+				Name:   branch,
+				Status: err.Error(),
+			})
+			continue
+		}
+		err = r.Push(tempBranch, true)
+		if err != nil {
+			status = append(status, syncStatus{
+				Name:   branch,
+				Status: err.Error(),
+			})
+			continue
+		}
+		// Wait for the temporary branch to take effect
+		sleepyTime := time.Second
+		for i := 0; i < 5; i++ {
+			_, err = s.GiteeClient.GetBranch(owner, repo, tempBranch)
+			if err != nil {
+				logrus.WithError(err).Infof("Waiting for branch %s to exist: retrying %d times", tempBranch, i+1)
+				time.Sleep(sleepyTime)
+				sleepyTime *= 2
+				continue
+			}
+			break
+		}
+		var url string
+		var st string
+		// create pull request
+		num, err := s.GiteeClient.CreatePullRequest(owner, repo, title, body, tempBranch, branch, true)
+		if err != nil {
+			logrus.Errorln("Create PullRequest failed:", err)
+			st = err.Error()
+		} else {
+			logrus.Infoln("Create PullRequest:", num)
+			st = "Create sync PR"
+			url = fmt.Sprintf("https://gitee.com/%v/%v/pulls/%v", owner, repo, num)
+		}
+		status = append(status, syncStatus{Name: branch, Status: st, PR: url})
+	}
+	return status, nil
 }
 
 func (s *Server) merge(owner string, repo string, opt *SyncCmdOption, branchSet map[string]bool, pr gitee.PullRequest, title string, body string) ([]syncStatus, error) {
@@ -153,7 +241,7 @@ func (s *Server) sync(owner string, repo string, pr gitee.PullRequest, user stri
 		branchSet[b.Name] = true
 	}
 
-	title := fmt.Sprintf("[sync-bot] from PR-%v: %v", number, pr.Title)
+	title := fmt.Sprintf("[sync-bot] PR-%v: %v", number, pr.Title)
 
 	data := struct {
 		PR      string
@@ -177,7 +265,9 @@ func (s *Server) sync(owner string, repo string, pr gitee.PullRequest, user stri
 	var status []syncStatus
 	switch opt.strategy {
 	case Pick:
-		s.pick()
+		firstSha := commits[len(commits)-1].Sha
+		lastSha := commits[0].Sha
+		status, _ = s.pick(owner, repo, opt, branchSet, pr, title, body, firstSha, lastSha)
 	case Merge:
 		status, _ = s.merge(owner, repo, opt, branchSet, pr, title, body)
 	case Overwrite:

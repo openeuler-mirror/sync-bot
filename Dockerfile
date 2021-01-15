@@ -13,6 +13,12 @@ RUN go build -o /sync-bot
 # Final stage
 FROM centos:8
 
+RUN dnf -y install git
+
+RUN git config --global user.name openeuler-sync-bot
+
+RUN git config --global user.email openeuler.syncbot@gmail.com
+
 EXPOSE 8765
 
 WORKDIR /

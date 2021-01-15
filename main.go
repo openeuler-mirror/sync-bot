@@ -6,6 +6,7 @@ import (
 	"os"
 	"strconv"
 
+	"sync-bot/git"
 	"sync-bot/gitee"
 	"sync-bot/hook"
 	"sync-bot/secret"
@@ -55,7 +56,15 @@ func main() {
 		logrus.WithError(err).Fatal("Load secret failed.")
 	}
 
+	gitClient, err := git.NewClient()
+	if err != nil {
+		logrus.WithError(err).Fatalf("New git client failed: %v", err)
+	}
+	// TODO: user must be configurable
+	gitClient.SetCredentials("openeuler-sync-bot", secret.GetGenerator(o.giteeToken))
+
 	server := hook.Server{
+		GitClient:   gitClient,
 		GiteeClient: gitee.NewClient(secret.GetGenerator(o.giteeToken)),
 		Secret:      secret.GetGenerator(o.webhookSecret),
 	}

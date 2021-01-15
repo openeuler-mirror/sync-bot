@@ -23,3 +23,6 @@ token.conf
 
 # secret
 secret.conf
+
+# clone repos
+repos

@@ -10,10 +10,13 @@ import (
 	"github.com/emicklei/go-restful/v3"
 	"github.com/sirupsen/logrus"
 
+	"sync-bot/git"
 	"sync-bot/gitee"
 )
 
 type Server struct {
+	// Client for git operation
+	GitClient *git.Client
 	// Client for access Gitee OpenAPI
 	GiteeClient gitee.Client
 	// function to get Gitee webhook secret

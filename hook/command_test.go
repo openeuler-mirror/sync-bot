@@ -21,7 +21,7 @@ func Test_parse(t *testing.T) {
 				"/sync",
 			},
 			want: &SyncCmdOption{
-				strategy: Merge,
+				strategy: Pick,
 				branches: []string{},
 			},
 			wantErr: false,
@@ -32,7 +32,7 @@ func Test_parse(t *testing.T) {
 				"/sync branch1",
 			},
 			want: &SyncCmdOption{
-				strategy: Merge,
+				strategy: Pick,
 				branches: []string{"branch1"},
 			},
 			wantErr: false,
@@ -43,7 +43,7 @@ func Test_parse(t *testing.T) {
 				"/sync branch1 branch2",
 			},
 			want: &SyncCmdOption{
-				strategy: Merge,
+				strategy: Pick,
 				branches: []string{"branch1", "branch2"},
 			},
 			wantErr: false,
@@ -62,7 +62,7 @@ func Test_parse(t *testing.T) {
 				"/sync foo.bar foo_bar foo-bar foo/bar",
 			},
 			want: &SyncCmdOption{
-				strategy: Merge,
+				strategy: Pick,
 				branches: []string{"foo.bar", "foo_bar", "foo-bar", "foo/bar"},
 			},
 			wantErr: false,
@@ -73,7 +73,7 @@ func Test_parse(t *testing.T) {
 				"\n\n/sync branch1",
 			},
 			want: &SyncCmdOption{
-				strategy: Merge,
+				strategy: Pick,
 				branches: []string{"branch1"},
 			},
 			wantErr: false,
@@ -84,7 +84,7 @@ func Test_parse(t *testing.T) {
 				"/sync branch1\n\n",
 			},
 			want: &SyncCmdOption{
-				strategy: Merge,
+				strategy: Pick,
 				branches: []string{"branch1"},
 			},
 			wantErr: false,
