@@ -129,12 +129,13 @@ func (s *Server) pick(owner string, repo string, opt *SyncCmdOption, branchSet m
 			})
 			continue
 		}
-		// Wait for the temporary branch to take effect
+		var num int
 		sleepyTime := time.Second
 		for i := 0; i < 5; i++ {
-			_, err = s.GiteeClient.GetBranch(owner, repo, tempBranch)
+			// create pull request
+			num, err = s.GiteeClient.CreatePullRequest(owner, repo, title, body, tempBranch, branch, true)
 			if err != nil {
-				logrus.WithError(err).Infof("Waiting for branch %s to exist: retrying %d times", tempBranch, i+1)
+				logrus.WithError(err).Infof("Create pull request: retrying %d times", i+1)
 				time.Sleep(sleepyTime)
 				sleepyTime *= 2
 				continue
@@ -143,8 +144,6 @@ func (s *Server) pick(owner string, repo string, opt *SyncCmdOption, branchSet m
 		}
 		var url string
 		var st string
-		// create pull request
-		num, err := s.GiteeClient.CreatePullRequest(owner, repo, title, body, tempBranch, branch, true)
 		if err != nil {
 			logrus.Errorln("Create PullRequest failed:", err)
 			st = err.Error()
@@ -241,7 +240,7 @@ func (s *Server) sync(owner string, repo string, pr gitee.PullRequest, user stri
 		branchSet[b.Name] = true
 	}
 
-	title := fmt.Sprintf("[sync-bot] PR-%v: %v", number, pr.Title)
+	title := fmt.Sprintf("[sync] PR-%v: %v", number, pr.Title)
 
 	data := struct {
 		PR      string
