@@ -23,7 +23,7 @@ type Server struct {
 	Secret func() []byte
 }
 
-func (s *Server) demuxEvent(eventType string, payload []byte, h http.Header) error {
+func (s *Server) demuxEvent(eventType gitee.EventType, payload []byte, h http.Header) error {
 	switch eventType {
 	case gitee.MergeRequestHook:
 		var e gitee.PullRequestEvent
@@ -88,11 +88,11 @@ func (s *Server) WebService() *restful.WebService {
 	return ws
 }
 
-func ValidateWebhook(req *restful.Request, resp *restful.Response) (string, bool, []byte, error) {
+func ValidateWebhook(req *restful.Request, resp *restful.Response) (gitee.EventType, bool, []byte, error) {
 	defer req.Request.Body.Close()
 	giteePing := req.Request.Header.Get("X-Gitee-Ping")
 	isPingEvent := giteePing == "true"
-	eventType := req.Request.Header.Get("X-Gitee-Event")
+	eventType := gitee.EventType(req.Request.Header.Get("X-Gitee-Event"))
 	if eventType == "" {
 		_ = resp.WriteErrorString(http.StatusBadRequest, "400 Bad Request: Missing X-GitHub-Event Header")
 		return "", isPingEvent, []byte{}, errors.New("400 Bad Request: Missing X-GitHub-Event Header")

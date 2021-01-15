@@ -5,9 +5,9 @@ type State string
 
 // State enum
 const (
-	StateOpen        = "open"
-	StateMerged      = "merged"
-	StateClosed      = "closed"
-	StateProgressing = "progressing"
-	StateRejected    = "rejected"
+	StateOpen        State = "open"
+	StateMerged      State = "merged"
+	StateClosed      State = "closed"
+	StateProgressing State = "progressing"
+	StateRejected    State = "rejected"
 )

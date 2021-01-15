@@ -5,21 +5,21 @@ type Action string
 
 // Action enum
 const (
-	ActionApproved    = "approved"
-	ActionAssign      = "assign"
-	ActionClose       = "close"
-	ActionComment     = "comment"
-	ActionDelete      = "delete"
-	ActionDeleted     = "deleted"
-	ActionEdited      = "edited"
-	ActionMerge       = "merge"
-	ActionOpen        = "open"
-	ActionStateChange = "state_change"
-	ActionTest        = "test"
-	ActionTested      = "tested"
-	ActionUnAssign    = "unassign"
-	ActionUnTest      = "untest"
-	ActionUpdate      = "update"
+	ActionApproved    Action = "approved"
+	ActionAssign      Action = "assign"
+	ActionClose       Action = "close"
+	ActionComment     Action = "comment"
+	ActionDelete      Action = "delete"
+	ActionDeleted     Action = "deleted"
+	ActionEdited      Action = "edited"
+	ActionMerge       Action = "merge"
+	ActionOpen        Action = "open"
+	ActionStateChange Action = "state_change"
+	ActionTest        Action = "test"
+	ActionTested      Action = "tested"
+	ActionUnAssign    Action = "unassign"
+	ActionUnTest      Action = "untest"
+	ActionUpdate      Action = "update"
 )
 
 //// Action Desc

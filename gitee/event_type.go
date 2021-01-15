@@ -5,9 +5,9 @@ type EventType string
 
 // EventType enum
 const (
-	PushHook         = "Push Hook"
-	TagPushHook      = "Tag Push Hook"
-	IssueHook        = "Issue Hook"
-	MergeRequestHook = "Merge Request Hook"
-	NoteHook         = "Note Hook"
+	PushHook         EventType = "Push Hook"
+	TagPushHook      EventType = "Tag Push Hook"
+	IssueHook        EventType = "Issue Hook"
+	MergeRequestHook EventType = "Merge Request Hook"
+	NoteHook         EventType = "Note Hook"
 )
