@@ -65,6 +65,15 @@ The following sync operations have been performed:
 |{{print .Name}}|{{print .Status}}|{{print .PR}}|
 {{- end}}
 `
+
+	replyClose = `
+In response to [this]({{.URL}}):
+> {{.Command}}
+
+@{{.User}}
+
+{{.Status}}
+`
 )
 
 var (
@@ -72,6 +81,7 @@ var (
 	replySyncTmpl      = template.Must(template.New("replySync").Parse(replySync))
 	syncPRBodyTmpl     = template.Must(template.New("syncPRBody").Parse(syncPRBody))
 	syncResultTmpl     = template.Must(template.New("syncPRBody").Parse(syncResult))
+	replyCloseTmpl     = template.Must(template.New("syncPRBody").Parse(replyClose))
 )
 
 const (
