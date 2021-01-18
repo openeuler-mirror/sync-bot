@@ -261,15 +261,30 @@ func (s *Server) NotePullRequest(e gitee.CommentPullRequestEvent) {
 }
 
 func (s *Server) HandleNoteEvent(e gitee.CommentPullRequestEvent) {
+	owner := e.Repository.Namespace
+	repo := e.Repository.Path
+
+	logger := logrus.WithFields(logrus.Fields{
+		"owner": owner,
+		"repo":  repo,
+	})
+
+	// TODO: need to be configurable
+	// ignore repo in openeuler
+	if owner == "openeuler" {
+		logger.Infoln("Ignore repo in openeuler")
+		return
+	}
+
 	switch e.Action {
 	case gitee.ActionComment:
 		switch e.NotableType {
 		case gitee.NotableTypePullRequest:
 			s.NotePullRequest(e)
 		default:
-			logrus.Infoln("Ignoring unhandled notable type:", e.NotableType)
+			logger.Infoln("Ignoring unhandled notable type:", e.NotableType)
 		}
 	default:
-		logrus.Infoln("Ignoring unhandled action:", e.Action)
+		logger.Infoln("Ignoring unhandled action:", e.Action)
 	}
 }
