@@ -198,6 +198,32 @@ The following sync operations have been performed:
 `,
 			wantErr: false,
 		},
+		{
+			name: "replayClose",
+			args: args{
+				tmpl: replyCloseTmpl,
+				data: struct {
+					URL     string
+					Command string
+					User    string
+					Status  string
+				}{
+					URL:     "https://example.com",
+					Command: "/close",
+					User:    "me",
+					Status:  "Close the current pull request by removing the source branch.",
+				},
+			},
+			want: `
+In response to [this](https://example.com):
+> /close
+
+@me
+
+Close the current pull request by removing the source branch.
+`,
+			wantErr: false,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

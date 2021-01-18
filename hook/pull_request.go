@@ -282,7 +282,7 @@ func (s *Server) sync(owner string, repo string, pr gitee.PullRequest, user stri
 	}{
 		URL:        url,
 		User:       user,
-		Command:    command,
+		Command:    strings.TrimSpace(command),
 		SyncStatus: status,
 	})
 	if err != nil {
@@ -334,7 +334,7 @@ func (s *Server) HandlePullRequestEvent(e gitee.PullRequestEvent) {
 		if matchTitle(title) {
 			logrus.WithFields(logrus.Fields{
 				"title": title,
-			}).Infoln("StateOpen Pull Request which created by sync-bot, ignore it.")
+			}).Infoln("Open Pull Request which created by sync-bot, ignore it.")
 		} else {
 			s.OpenPullRequest(e)
 		}

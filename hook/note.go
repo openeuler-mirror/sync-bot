@@ -2,6 +2,7 @@ package hook
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/sirupsen/logrus"
 
@@ -116,7 +117,7 @@ func (s *Server) replySync(e gitee.CommentPullRequestEvent) {
 		Branches []branchStatus
 	}{
 		URL:      url,
-		Command:  comment,
+		Command:  strings.TrimSpace(comment),
 		User:     user,
 		Branches: synBranches,
 	}
@@ -147,6 +148,68 @@ func (s *Server) replySync(e gitee.CommentPullRequestEvent) {
 	}
 }
 
+func (s *Server) doClosePullRequest(e gitee.CommentPullRequestEvent) error {
+	owner := e.Repository.Namespace
+	repo := e.Repository.Path
+	title := e.PullRequest.Title
+	number := e.PullRequest.Number
+	state := e.PullRequest.State
+	url := e.Comment.HTMLURL
+	user := e.Comment.User.Username
+	comment := e.Comment.Body
+
+	logger := logrus.WithFields(logrus.Fields{
+		"owner":   owner,
+		"repo":    repo,
+		"title":   title,
+		"number":  number,
+		"state":   state,
+		"url":     url,
+		"user":    user,
+		"comment": comment,
+	})
+
+	if !matchTitle(title) {
+		logger.Infoln("Pull request not create by sync-bot, ignoring it.")
+		return nil
+	}
+	if state != gitee.StateOpen {
+		logger.Infoln("Pull request state is not open, ignoring it.")
+		return nil
+	}
+
+	r, err := s.GitClient.Clone(owner, repo)
+	if err != nil {
+		logger.Errorf("Clone repo failed: %v", err)
+		return err
+	}
+	sourceBranch := e.PullRequest.Head.Ref
+	logger.Infoln("Close request pull by delete source branch.")
+
+	var status string
+	err = r.DeleteRemoteBranch(sourceBranch)
+	if err != nil {
+		status = fmt.Sprintf("Close the current pull request failed: %v", err)
+	} else {
+		status = "Close the current pull request by removing the source branch."
+	}
+
+	reply, _ := executeTemplate(replyCloseTmpl, struct {
+		URL     string
+		User    string
+		Command string
+		Status  string
+	}{
+		URL:     url,
+		User:    user,
+		Command: strings.TrimSpace(comment),
+		Status:  status,
+	})
+
+	return s.GiteeClient.CreateComment(owner, repo, number, reply)
+
+}
+
 func (s *Server) NotePullRequest(e gitee.CommentPullRequestEvent) {
 	owner := e.Repository.Namespace
 	repo := e.Repository.Path
@@ -156,6 +219,7 @@ func (s *Server) NotePullRequest(e gitee.CommentPullRequestEvent) {
 	url := e.Comment.HTMLURL
 	targetBranch := e.PullRequest.Base.Ref
 	state := e.PullRequest.State
+
 	logrus.WithFields(logrus.Fields{
 		"owner":   owner,
 		"repo":    repo,
@@ -185,6 +249,11 @@ func (s *Server) NotePullRequest(e gitee.CommentPullRequestEvent) {
 				"state":   state,
 			}).Infoln("Ignoring unhandled pull request state.")
 		}
+		return
+	}
+
+	if matchClose(comment) {
+		_ = s.doClosePullRequest(e)
 		return
 	}
 
