@@ -109,7 +109,7 @@ func (s *Server) pick(owner string, repo string, opt *SyncCmdOption, branchSet m
 			})
 			continue
 		}
-		err = r.CherryPick(firstSha, lastSha, git.Ours)
+		err = r.CherryPick(firstSha, lastSha, git.Theirs)
 		if err != nil {
 			status = append(status, syncStatus{
 				Name:   branch,
