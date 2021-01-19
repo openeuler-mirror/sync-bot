@@ -2,6 +2,7 @@ POST http://localhost:8765/hook
 Content-Type: application/json
 Accept: application/json
 X-Gitee-Event: Merge Request Hook
+X-Gitee-Token: Secret
 
 {
   "action": "open",

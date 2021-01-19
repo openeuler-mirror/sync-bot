@@ -23,10 +23,6 @@ func (s *Server) OpenPullRequest(e gitee.PullRequestEvent) {
 		"number": number,
 		"title":  title,
 	}).Infoln("OpenPullRequest")
-	if matchTitle(title) {
-		logrus.Infoln("Ignore PullRequest created by sync-bot")
-		return
-	}
 	s.replySyncCheck(owner, repo, number, targetBranch)
 }
 
@@ -329,32 +325,36 @@ func (s *Server) ClosePullRequest(e gitee.PullRequestEvent) {
 
 func (s *Server) HandlePullRequestEvent(e gitee.PullRequestEvent) {
 	title := e.PullRequest.Title
+	owner := e.Repository.Namespace
+	repo := e.Repository.Path
+
+	logger := logrus.WithFields(logrus.Fields{
+		"title": title,
+		"owner": owner,
+		"repo":  repo,
+	})
+
+	// TODO: need to be configurable
+	// ignore repo in openeuler
+	if owner == "openeuler" {
+		logger.Infoln("Ignore repo in openeuler")
+		return
+	}
+
 	switch e.Action {
 	case gitee.ActionOpen:
 		if matchTitle(title) {
-			logrus.WithFields(logrus.Fields{
-				"title": title,
-			}).Infoln("Open Pull Request which created by sync-bot, ignore it.")
+			logger.Infoln("Open Pull Request which created by sync-bot, ignore it.")
 		} else {
 			s.OpenPullRequest(e)
 		}
 	case gitee.ActionMerge:
 		if matchTitle(title) {
-			logrus.WithFields(logrus.Fields{
-				"title": title,
-			}).Infoln("Merge Pull Request which created by sync-bot, ignore it.")
+			logger.Infoln("Merge Pull Request which created by sync-bot, ignore it.")
 		} else {
 			s.MergePullRequest(e)
 		}
-	case gitee.ActionClose:
-		if !matchTitle(title) {
-			logrus.WithFields(logrus.Fields{
-				"title": title,
-			}).Infoln("Close Pull Request which not created by sync-bot, ignore it.")
-		} else {
-			s.ClosePullRequest(e)
-		}
 	default:
-		logrus.Infoln("Ignoring unhandled action:", e.Action)
+		logger.Infoln("Ignoring unhandled action:", e.Action)
 	}
 }
