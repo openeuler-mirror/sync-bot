@@ -144,3 +144,50 @@ func TestMatchSyncCheck(t *testing.T) {
 		})
 	}
 }
+
+func TestMatchSyncBranch(t *testing.T) {
+	type args struct {
+		content string
+	}
+	tests := []struct {
+		name string
+		args args
+		want bool
+	}{
+		{
+			name: "sync-pr103-master-to-openEuler-20.03-LTS-Next",
+			args: args{
+				content: "sync-pr103-master-to-openEuler-20.03-LTS-Next",
+			},
+			want: true,
+		},
+		{
+			name: "sync-pr103-master-to-openEuler-20.03-LTS-SP1",
+			args: args{
+				content: "sync-pr103-master-to-openEuler-20.03-LTS-SP1",
+			},
+			want: true,
+		},
+		{
+			name: "openEuler-20.03-LTS-SP1",
+			args: args{
+				content: "openEuler-20.03-LTS-SP1",
+			},
+			want: false,
+		},
+		{
+			name: "sync-pr1-to-",
+			args: args{
+				content: "sync-pr1-to-",
+			},
+			want: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := matchSyncBranch(tt.args.content); got != tt.want {
+				t.Errorf("matchSyncBranch() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}

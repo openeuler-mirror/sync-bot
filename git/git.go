@@ -23,6 +23,14 @@ const (
 	Theirs StrategyOption = "theirs"
 )
 
+// MergeOption merge option
+type MergeOption string
+
+// MergeOption enum
+const (
+	MergeFF MergeOption = "--ff"
+)
+
 const repoPath = "repos"
 const gitee = "gitee.com"
 
@@ -367,6 +375,16 @@ func (r *Repo) Config(key, value string) error {
 		return fmt.Errorf("git config %s %s failed: %v. output: %s", key, value, err, string(b))
 	}
 	return nil
+}
+
+// Merge incorporates changes from other branch
+func (r *Repo) Merge(ref string, option MergeOption) error {
+	logrus.Infof("Running git merge %v %s", option, ref)
+	if b, err := r.gitCommand("merge", string(option), ref).CombinedOutput(); err != nil {
+		return fmt.Errorf("git merge %s %s failed: %v. output: %s", option, ref, err, string(b))
+	}
+	return nil
+
 }
 
 // retryCmd will retry the command a few times with backoff. Use this for any

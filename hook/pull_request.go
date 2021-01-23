@@ -64,6 +64,61 @@ func (s *Server) MergePullRequest(e gitee.PullRequestEvent) {
 	}).Warnln("Not found valid /sync command in pr comments")
 }
 
+func (s *Server) AutoMerge(e gitee.PullRequestEvent) {
+	owner := e.Repository.Namespace
+	repo := e.Repository.Path
+	number := e.PullRequest.Number
+	title := e.PullRequest.Title
+	sourceBranch := e.PullRequest.Base.Ref
+	targetBranch := e.PullRequest.Base.Ref
+	mergeable := e.PullRequest.Mergeable
+	logger := logrus.WithFields(logrus.Fields{
+		"owner":        owner,
+		"repo":         repo,
+		"number":       number,
+		"title":        title,
+		"sourceBranch": sourceBranch,
+		"targetBranch": targetBranch,
+		"mergeable":    mergeable,
+	})
+
+	if !mergeable {
+		logger.Infoln("The current pull request can not be merge.")
+		comment := "The current pull request can not be merge. "
+		err := s.GiteeClient.CreateComment(owner, repo, number, comment)
+		if err != nil {
+			logger.Errorf("Create comment failed: %v", err)
+		}
+		return
+	}
+	r, err := s.GitClient.Clone(owner, repo)
+	if err != nil {
+		logger.Errorf("Clone repository failed: %v", err)
+		return
+	}
+	err = r.FetchPullRequest(number)
+	if err != nil {
+		logger.Errorf("Clone repository failed: %v", err)
+		return
+	}
+	r.CheckoutNewBranch(targetBranch, true)
+	if err != nil {
+		logger.Errorf("Checkout %v failed: %v", targetBranch, err)
+		return
+	}
+	pr := fmt.Sprintf("origin/pull/%v", number)
+	err = r.Merge(pr, git.MergeFF)
+	if err != nil {
+		logger.Errorf("Merge failed: %v", err)
+		return
+	}
+	err = r.Push(targetBranch, true)
+	if err != nil {
+		logger.Errorf("Push %v failed: %v", targetBranch, err)
+		return
+	}
+}
+
 func (s *Server) pick(owner string, repo string, opt *SyncCmdOption, branchSet map[string]bool, pr gitee.PullRequest,
 	title string, body string, firstSha string, lastSha string) ([]syncStatus, error) {
 	number := pr.Number
@@ -327,17 +382,21 @@ func (s *Server) HandlePullRequestEvent(e gitee.PullRequestEvent) {
 	title := e.PullRequest.Title
 	owner := e.Repository.Namespace
 	repo := e.Repository.Path
+	sourceBranch := e.PullRequest.Head.Ref
+	targetBranch := e.PullRequest.Base.Ref
 
 	logger := logrus.WithFields(logrus.Fields{
-		"title": title,
-		"owner": owner,
-		"repo":  repo,
+		"title":        title,
+		"owner":        owner,
+		"repo":         repo,
+		"sourceBranch": sourceBranch,
+		"targetBranch": targetBranch,
 	})
 
 	// TODO: need to be configurable
-	// ignore repo in openeuler
+	// ignoring repo in openeuler
 	if owner == "openeuler" {
-		logger.Infoln("Ignore repo in openeuler")
+		logger.Infoln("Ignoring repo in openeuler")
 		return
 	}
 
@@ -345,14 +404,24 @@ func (s *Server) HandlePullRequestEvent(e gitee.PullRequestEvent) {
 	case gitee.ActionOpen:
 		if matchTitle(title) {
 			logger.Infoln("Open Pull Request which created by sync-bot, ignore it.")
+		} else if matchSyncBranch(targetBranch) {
+			s.AutoMerge(e)
 		} else {
 			s.OpenPullRequest(e)
 		}
 	case gitee.ActionMerge:
 		if matchTitle(title) {
 			logger.Infoln("Merge Pull Request which created by sync-bot, ignore it.")
+		} else if matchSyncBranch(targetBranch) {
+			logger.Infoln("Merge Pull Request to sync branch, ignore it.")
 		} else {
 			s.MergePullRequest(e)
+		}
+	case gitee.ActionUpdate:
+		if matchSyncBranch(targetBranch) {
+			s.AutoMerge(e)
+		} else {
+			logger.Infoln("Ignoring unhandled action:", e.Action)
 		}
 	default:
 		logger.Infoln("Ignoring unhandled action:", e.Action)
