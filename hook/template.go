@@ -7,16 +7,17 @@ import (
 
 const (
 	replySyncCheck = `
-This repository has the following protected branches:
+当前仓库包含以下 __保护分支__
 | Protected Branch | Version | Release |
 |---|---|---|
 {{- range .}}
 |{{.Name}}| | |
 {{- end}}
 
-Use ` + "`/sync <branch> ...`" + ` command to register the branch that the current PR changes will synchronize to.
-Once the current PR is merged, the synchronization operation will be performed.
-(Only the last comment which include valid /sync command will be processed.)
+评论 ` + "`/sync <branch1> <branch2> ...`" + ` 可以将当前 PR 的修改应用到其它分支(创建同步操作 PR)：
+a) 如果当前 PR 是 Open 状态，同步操作将延迟到 PR 被合并时执行；
+b) 如果当前 PR 已经 Merged，将立即执行同步操作。
+(/sync 命令可以同时指定多个分支)
 `
 
 	replySync = `
@@ -24,8 +25,7 @@ In response to [this]({{.URL}}):
 > {{.Command}}
 
 @{{.User}}
-Receive the synchronization command.
-Sync operation will be applied to the following branch(es), if the current PR is merged:
+一旦当前 PR 被合入，以下同步操作将会执行:
 
 | Branch | Status |
 |---|---|
@@ -57,7 +57,7 @@ In response to [this]({{.URL}}):
 
 @{{.User}}
 
-The following sync operations have been performed:
+同步操作执行结果:
 
 | Branch | Status | Pull Request |
 |---|---|---|
