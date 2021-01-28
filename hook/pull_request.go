@@ -101,7 +101,7 @@ func (s *Server) AutoMerge(e gitee.PullRequestEvent) {
 		logger.Errorf("Clone repository failed: %v", err)
 		return
 	}
-	r.CheckoutNewBranch(targetBranch, true)
+	err = r.CheckoutNewBranch(targetBranch, true)
 	if err != nil {
 		logger.Errorf("Checkout %v failed: %v", targetBranch, err)
 		return
