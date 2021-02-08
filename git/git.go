@@ -11,6 +11,8 @@ import (
 	"time"
 
 	"github.com/sirupsen/logrus"
+
+	"sync-bot/util"
 )
 
 // StrategyOption strategy option for cherry-pick
@@ -186,7 +188,12 @@ func (r *Repo) Destroy() error {
 func (r *Repo) gitCommand(arg ...string) *exec.Cmd {
 	cmd := exec.Command(r.git, arg...)
 	cmd.Dir = r.dir
-	logrus.WithField("args", cmd.Args).WithField("dir", cmd.Dir).Debug("Constructed git command")
+
+	// hide secret in command arguments
+	for i, a := range arg {
+		arg[i] = util.DeSecret(a)
+	}
+	logrus.WithField("args", arg).WithField("dir", cmd.Dir).Debug("Constructed git command")
 	return cmd
 }
 
