@@ -7,7 +7,6 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"strings"
 	"sync"
 	"time"
 
@@ -258,21 +257,8 @@ func (r *Repo) CheckoutNewBranch(branch string, force bool) error {
 
 // CherryPick cherry-pick from commits with strategyOption
 func (r *Repo) CherryPick(first, last string, strategyOption StrategyOption) error {
-	co := r.gitCommand("rev-parse", "--short=8", first)
-	firstSha, err := co.CombinedOutput()
-	if err != nil {
-		logrus.Errorf("rev-parse failed with error: %v and output: %q", err, string(firstSha))
-		return fmt.Errorf("rev-parse failed, output: %q, error: %v", string(firstSha), err)
-	}
-	co = r.gitCommand("rev-parse", "--short=8", last)
-	lastSha, err := co.CombinedOutput()
-	if err != nil {
-		logrus.Errorf("rev-parse failed with error: %v and output: %q", err, string(lastSha))
-		return fmt.Errorf("rev-parse failed, output: %q, error: %v", string(lastSha), err)
-	}
-	logrus.Infof("Cherry Pick from %s(%s) to %s(%s).", first, strings.TrimSpace(string(firstSha)),
-		last, strings.TrimSpace(string(lastSha)))
-	co = r.gitCommand("cherry-pick", "--keep-redundant-commits", "--mainline=1", "-x",
+	logrus.Infof("Cherry Pick from %s to %s.", first, last)
+	co := r.gitCommand("cherry-pick", "--keep-redundant-commits", "--mainline=1", "-x",
 		"-X", string(strategyOption), fmt.Sprintf("%s^..%s", first, last))
 	out, err := co.CombinedOutput()
 	if err != nil {
@@ -345,20 +331,7 @@ func (r *Repo) DeleteRemoteBranch(branch string) error {
 	return nil
 }
 
-// CheckoutPullRequest does exactly that.
-func (r *Repo) CheckoutPullRequest(number int) error {
-	logrus.Infof("Fetching and checking out %s/%s#%d.", r.owner, r.repo, number)
-	if b, err := retryCmd(r.dir, r.git, "fetch", r.base+"/"+r.owner+"/"+r.repo, fmt.Sprintf("pull/%d/head:pull%d", number, number)); err != nil {
-		return fmt.Errorf("git fetch failed for PR %d: %v. output: %s", number, err, string(b))
-	}
-	co := r.gitCommand("checkout", fmt.Sprintf("pull%d", number))
-	if b, err := co.CombinedOutput(); err != nil {
-		return fmt.Errorf("git checkout failed for PR %d: %v. output: %s", number, err, string(b))
-	}
-	return nil
-}
-
-// FetchPullRequest does exactly that.
+// FetchPullRequest just fetch
 func (r *Repo) FetchPullRequest(number int) error {
 	logrus.Infof("Fetching %s/%s#%d.", r.owner, r.repo, number)
 	if b, err := retryCmd(r.dir, r.git, "fetch", r.base+"/"+r.owner+"/"+r.repo,
@@ -384,7 +357,6 @@ func (r *Repo) Merge(ref string, option MergeOption) error {
 		return fmt.Errorf("git merge %s %s failed: %v. output: %s", option, ref, err, string(b))
 	}
 	return nil
-
 }
 
 // retryCmd will retry the command a few times with backoff. Use this for any

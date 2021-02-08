@@ -98,7 +98,13 @@ func (s *Server) AutoMerge(e gitee.PullRequestEvent) {
 	}
 	err = r.FetchPullRequest(number)
 	if err != nil {
-		logger.Errorf("Clone repository failed: %v", err)
+		logger.Errorf("Fetch pull request failed: %v", err)
+		return
+	}
+	remoteBranch := "origin/" + targetBranch
+	err = r.Checkout(remoteBranch)
+	if err != nil {
+		logger.Errorf("Checkout %v failed: %v", remoteBranch, err)
 		return
 	}
 	err = r.CheckoutNewBranch(targetBranch, true)
