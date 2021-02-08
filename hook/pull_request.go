@@ -9,6 +9,7 @@ import (
 
 	"sync-bot/git"
 	"sync-bot/gitee"
+	"sync-bot/util"
 )
 
 func (s *Server) OpenPullRequest(e gitee.PullRequestEvent) {
@@ -51,7 +52,7 @@ func (s *Server) MergePullRequest(e gitee.PullRequestEvent) {
 		user := c.User.Username
 		url := c.HTMLURL
 		body := comment.Body
-		if matchSync(body) {
+		if util.MatchSync(body) {
 			logrus.WithFields(logrus.Fields{
 				"comment": body,
 			}).Infoln("match /sync command")
@@ -408,23 +409,23 @@ func (s *Server) HandlePullRequestEvent(e gitee.PullRequestEvent) {
 
 	switch e.Action {
 	case gitee.ActionOpen:
-		if matchTitle(title) {
+		if util.MatchTitle(title) {
 			logger.Infoln("Open Pull Request which created by sync-bot, ignore it.")
-		} else if matchSyncBranch(targetBranch) {
+		} else if util.MatchSyncBranch(targetBranch) {
 			s.AutoMerge(e)
 		} else {
 			s.OpenPullRequest(e)
 		}
 	case gitee.ActionMerge:
-		if matchTitle(title) {
+		if util.MatchTitle(title) {
 			logger.Infoln("Merge Pull Request which created by sync-bot, ignore it.")
-		} else if matchSyncBranch(targetBranch) {
+		} else if util.MatchSyncBranch(targetBranch) {
 			logger.Infoln("Merge Pull Request to sync branch, ignore it.")
 		} else {
 			s.MergePullRequest(e)
 		}
 	case gitee.ActionUpdate:
-		if matchSyncBranch(targetBranch) {
+		if util.MatchSyncBranch(targetBranch) {
 			s.AutoMerge(e)
 		} else {
 			logger.Infoln("Ignoring unhandled action:", e.Action)

@@ -7,6 +7,7 @@ import (
 	"github.com/sirupsen/logrus"
 
 	"sync-bot/gitee"
+	"sync-bot/util"
 )
 
 func (s *Server) replySyncCheck(owner string, repo string, number int, targetBranch string) {
@@ -169,7 +170,7 @@ func (s *Server) doClosePullRequest(e gitee.CommentPullRequestEvent) error {
 		"comment": comment,
 	})
 
-	if !matchTitle(title) {
+	if !util.MatchTitle(title) {
 		logger.Infoln("Pull request not create by sync-bot, ignoring it.")
 		return nil
 	}
@@ -228,13 +229,13 @@ func (s *Server) NotePullRequest(e gitee.CommentPullRequestEvent) {
 		"url":     url,
 	}).Infoln("NotePullRequest")
 
-	if matchSyncCheck(comment) {
+	if util.MatchSyncCheck(comment) {
 		logrus.Infoln("Receive /sync-check command")
 		s.replySyncCheck(owner, repo, number, targetBranch)
 		return
 	}
 
-	if matchSync(comment) {
+	if util.MatchSync(comment) {
 		logrus.Infoln("Receive /sync command")
 		switch state {
 		case gitee.StateOpen:
@@ -252,7 +253,7 @@ func (s *Server) NotePullRequest(e gitee.CommentPullRequestEvent) {
 		return
 	}
 
-	if matchClose(comment) {
+	if util.MatchClose(comment) {
 		_ = s.doClosePullRequest(e)
 		return
 	}

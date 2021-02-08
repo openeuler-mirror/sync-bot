@@ -1,4 +1,4 @@
-package hook
+package util
 
 import (
 	"testing"
@@ -30,8 +30,8 @@ func TestMatchTitle(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := matchTitle(tt.args.title); got != tt.want {
-				t.Errorf("matchTitle() = %v, want %v", got, tt.want)
+			if got := MatchTitle(tt.args.title); got != tt.want {
+				t.Errorf("MatchTitle() = %v, want %v", got, tt.want)
 			}
 		})
 	}
@@ -91,8 +91,8 @@ func TestMatchSync(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := matchSync(tt.args.content); got != tt.want {
-				t.Errorf("matchSync() = %v, want %v", got, tt.want)
+			if got := MatchSync(tt.args.content); got != tt.want {
+				t.Errorf("MatchSync() = %v, want %v", got, tt.want)
 			}
 		})
 	}
@@ -138,8 +138,8 @@ func TestMatchSyncCheck(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := matchSyncCheck(tt.args.content); got != tt.want {
-				t.Errorf("matchSyncCheck() = %v, want %v", got, tt.want)
+			if got := MatchSyncCheck(tt.args.content); got != tt.want {
+				t.Errorf("MatchSyncCheck() = %v, want %v", got, tt.want)
 			}
 		})
 	}
@@ -185,8 +185,102 @@ func TestMatchSyncBranch(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := matchSyncBranch(tt.args.content); got != tt.want {
-				t.Errorf("matchSyncBranch() = %v, want %v", got, tt.want)
+			if got := MatchSyncBranch(tt.args.content); got != tt.want {
+				t.Errorf("MatchSyncBranch() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestMatchSecretURL(t *testing.T) {
+	type args struct {
+		url string
+	}
+	tests := []struct {
+		name string
+		args args
+		want bool
+	}{
+		{
+			name: "NonURL",
+			args: args{
+				"non-url",
+			},
+			want: false,
+		},
+		{
+			name: "NonSecretURL",
+			args: args{
+				"https://example.com",
+			},
+			want: false,
+		},
+		{
+			name: "incompleteURL1",
+			args: args{
+				"https://user:@example.com",
+			},
+			want: false,
+		},
+		{
+			name: "incompleteURL2",
+			args: args{
+				"https://:password@example.com",
+			},
+			want: false,
+		},
+		{
+			name: "SecretURL",
+			args: args{
+				"https://user:password@example.com",
+			},
+			want: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := MatchSecretURL(tt.args.url); got != tt.want {
+				t.Errorf("MatchSecretURL() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func Test_deSecret(t *testing.T) {
+	type args struct {
+		url string
+	}
+	tests := []struct {
+		name string
+		args args
+		want string
+	}{
+		{
+			name: "SecretURL",
+			args: args{
+				"https://foo:bar@example.com",
+			},
+			want: "https://<user>:<password>@example.com",
+		},
+		{
+			name: "NonSecretURL",
+			args: args{
+				"https://example.com",
+			},
+			want: "https://example.com",
+		},
+		{
+			name: "NonURL",
+			args: args{
+				"--foo.bar",
+			},
+			want: "--foo.bar",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := DeSecret(tt.args.url); got != tt.want {
+				t.Errorf("DeSecret() = %v, want %v", got, tt.want)
 			}
 		})
 	}
