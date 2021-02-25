@@ -374,15 +374,31 @@ func (s *Server) ClosePullRequest(e gitee.PullRequestEvent) {
 	owner := e.Repository.Namespace
 	repo := e.Repository.Path
 	number := e.PullRequest.Number
+	title := e.PullRequest.Title
+	state := e.PullRequest.State
+	sourceBranch := e.PullRequest.Head.Ref
 
-	logrus.WithFields(logrus.Fields{
-		"owner":  owner,
-		"repo":   repo,
-		"number": number,
-	}).Infoln("ClosePullRequest")
+	logger := logrus.WithFields(logrus.Fields{
+		"owner":        owner,
+		"repo":         repo,
+		"title":        title,
+		"number":       number,
+		"state":        state,
+		"sourceBranch": sourceBranch,
+	})
+	logger.Infoln("ClosePullRequest")
 
-	// TODO: close issue created by sync-bot, delete temp branch
-
+	r, err := s.GitClient.Clone(owner, repo)
+	if err != nil {
+		logger.Errorf("Clone repo failed: %v", err)
+		return
+	}
+	err = r.DeleteRemoteBranch(sourceBranch)
+	if err != nil {
+		logger.Warningln("Delete source branch failed:", err)
+		return
+	}
+	logger.Info("Delete source branch.")
 }
 
 func (s *Server) HandlePullRequestEvent(e gitee.PullRequestEvent) {
@@ -429,6 +445,12 @@ func (s *Server) HandlePullRequestEvent(e gitee.PullRequestEvent) {
 			s.AutoMerge(e)
 		} else {
 			logger.Infoln("Ignoring unhandled action:", e.Action)
+		}
+	case gitee.ActionClose:
+		if util.MatchTitle(title) {
+			s.ClosePullRequest(e)
+		} else {
+			logger.Infoln("Pull request not create by sync-bot, ignoring it.")
 		}
 	default:
 		logger.Infoln("Ignoring unhandled action:", e.Action)
