@@ -405,6 +405,7 @@ func (s *Server) HandlePullRequestEvent(e gitee.PullRequestEvent) {
 	title := e.PullRequest.Title
 	owner := e.Repository.Namespace
 	repo := e.Repository.Path
+	number := e.PullRequest.Number
 	sourceBranch := e.PullRequest.Head.Ref
 	targetBranch := e.PullRequest.Base.Ref
 
@@ -412,6 +413,7 @@ func (s *Server) HandlePullRequestEvent(e gitee.PullRequestEvent) {
 		"title":        title,
 		"owner":        owner,
 		"repo":         repo,
+		"number":       number,
 		"sourceBranch": sourceBranch,
 		"targetBranch": targetBranch,
 	})
@@ -426,7 +428,11 @@ func (s *Server) HandlePullRequestEvent(e gitee.PullRequestEvent) {
 	switch e.Action {
 	case gitee.ActionOpen:
 		if util.MatchTitle(title) {
-			logger.Infoln("Open Pull Request which created by sync-bot, ignore it.")
+			// Temporarily circumvent the problem of label openeuler-cla/yes loss
+			err := s.GiteeClient.CreateComment(owner, repo, number, "/check-cla")
+			if err != nil {
+				logrus.Warningln("Create comment failed:", err)
+			}
 		} else if util.MatchSyncBranch(targetBranch) {
 			s.AutoMerge(e)
 		} else {
