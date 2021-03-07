@@ -370,13 +370,11 @@ func (s *Server) sync(owner string, repo string, pr gitee.PullRequest, user stri
 	return err
 }
 
-func (s *Server) ClosePullRequest(e gitee.PullRequestEvent) {
-	owner := e.Repository.Namespace
-	repo := e.Repository.Path
-	number := e.PullRequest.Number
-	title := e.PullRequest.Title
-	state := e.PullRequest.State
-	sourceBranch := e.PullRequest.Head.Ref
+func (s *Server) ClosePullRequest(owner, repo string, pr gitee.PullRequest) {
+	number := pr.Number
+	title := pr.Title
+	state := pr.State
+	sourceBranch := pr.Head.Ref
 
 	logger := logrus.WithFields(logrus.Fields{
 		"owner":        owner,
@@ -393,12 +391,14 @@ func (s *Server) ClosePullRequest(e gitee.PullRequestEvent) {
 		logger.Errorf("Clone repo failed: %v", err)
 		return
 	}
-	err = r.DeleteRemoteBranch(sourceBranch)
-	if err != nil {
-		logger.Warningln("Delete source branch failed:", err)
+	if r.RemoteBranchExists(sourceBranch) {
+		err = r.DeleteRemoteBranch(sourceBranch)
+		if err != nil {
+			logger.Errorln("Delete source branch failed:", err)
+		}
 		return
 	}
-	logger.Info("Delete source branch.")
+	logger.Warningf("Source branch %v not found.", sourceBranch)
 }
 
 func (s *Server) HandlePullRequestEvent(e gitee.PullRequestEvent) {
@@ -454,7 +454,7 @@ func (s *Server) HandlePullRequestEvent(e gitee.PullRequestEvent) {
 		}
 	case gitee.ActionClose:
 		if util.MatchTitle(title) {
-			s.ClosePullRequest(e)
+			s.ClosePullRequest(owner, repo, e.PullRequest)
 		} else {
 			logger.Infoln("Pull request not create by sync-bot, ignoring it.")
 		}

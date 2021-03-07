@@ -191,6 +191,11 @@ func (s *Server) NotePullRequest(e gitee.CommentPullRequestEvent) {
 		return
 	}
 
+	if util.MatchClose(comment) {
+		s.ClosePullRequest(owner, repo, e.PullRequest)
+		return
+	}
+
 	logrus.Infoln("Ignoring unhandled comment.")
 }
 
