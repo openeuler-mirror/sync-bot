@@ -428,11 +428,15 @@ func (s *Server) HandlePullRequestEvent(e gitee.PullRequestEvent) {
 	switch e.Action {
 	case gitee.ActionOpen:
 		if util.MatchTitle(title) {
-			// Temporarily circumvent the problem of label openeuler-cla/yes loss
-			err := s.GiteeClient.CreateComment(owner, repo, number, "/check-cla")
-			if err != nil {
-				logrus.Warningln("Create comment failed:", err)
-			}
+			go func() {
+				// Temporarily circumvent the problem of label openeuler-cla/yes loss
+				// Waitting for the openeuler-cal/yes label to be removed before commenting on /check-cla, so delay one seconds here
+				time.Sleep(time.Second)
+				err := s.GiteeClient.CreateComment(owner, repo, number, "/check-cla")
+				if err != nil {
+					logrus.Warningln("Create comment failed:", err)
+				}
+			}()
 		} else if util.MatchSyncBranch(targetBranch) {
 			s.AutoMerge(e)
 		} else {
