@@ -158,6 +158,7 @@ func (s *Server) NotePullRequest(e gitee.CommentPullRequestEvent) {
 	url := e.Comment.HTMLURL
 	targetBranch := e.PullRequest.Base.Ref
 	state := e.PullRequest.State
+	title := e.PullRequest.Title
 
 	logrus.WithFields(logrus.Fields{
 		"owner":   owner,
@@ -191,7 +192,7 @@ func (s *Server) NotePullRequest(e gitee.CommentPullRequestEvent) {
 		return
 	}
 
-	if util.MatchClose(comment) {
+	if util.MatchClose(comment) && util.MatchTitle(title) {
 		s.ClosePullRequest(owner, repo, e.PullRequest)
 		return
 	}
