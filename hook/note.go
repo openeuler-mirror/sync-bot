@@ -160,44 +160,51 @@ func (s *Server) NotePullRequest(e gitee.CommentPullRequestEvent) {
 	state := e.PullRequest.State
 	title := e.PullRequest.Title
 
-	logrus.WithFields(logrus.Fields{
-		"owner":   owner,
-		"repo":    repo,
-		"number":  number,
-		"comment": comment,
-		"url":     url,
-	}).Infoln("NotePullRequest")
+	logger := logrus.WithFields(logrus.Fields{
+		"owner":        owner,
+		"repo":         repo,
+		"number":       number,
+		"comment":      comment,
+		"uer":          user,
+		"url":          url,
+		"targetBranch": targetBranch,
+		"state":        state,
+		"title":        title,
+	})
+	logger.Infoln("NotePullRequest")
 
 	if util.MatchSyncCheck(comment) {
-		logrus.Infoln("Receive /sync-check command")
+		logger.Infoln("Receive /sync-check command")
 		s.replySyncCheck(owner, repo, number, targetBranch)
 		return
 	}
 
 	if util.MatchSync(comment) {
-		logrus.Infoln("Receive /sync command")
+		logger.Infoln("Receive /sync command")
 		switch state {
 		case gitee.StateOpen:
-			logrus.Infoln("Pull request is open, just replay sync.")
+			logger.Infoln("Pull request is open, just replay sync.")
 			s.replySync(e)
 		case gitee.StateMerged:
-			logrus.Infoln("Pull request is merge, perform sync operation.")
+			logger.Infoln("Pull request is merge, perform sync operation.")
 			_ = s.sync(owner, repo, e.PullRequest, user, url, comment)
 		default:
-			logrus.WithFields(logrus.Fields{
-				"comment": comment,
-				"state":   state,
-			}).Infoln("Ignoring unhandled pull request state.")
+			logger.Infoln("Ignoring unhandled pull request state.")
 		}
 		return
 	}
 
-	if util.MatchClose(comment) && util.MatchTitle(title) {
-		s.ClosePullRequest(owner, repo, e.PullRequest)
+	if util.MatchClose(comment) {
+		logger.Infoln("Receive /close command")
+		if util.MatchTitle(title) {
+			s.ClosePullRequest(owner, repo, e.PullRequest)
+		} else {
+			logger.Infoln("Pull request not created by sync-bot, ignoring /close.")
+		}
 		return
 	}
 
-	logrus.Infoln("Ignoring unhandled comment.")
+	logger.Infoln("Ignoring unhandled comment.")
 }
 
 func (s *Server) HandleNoteEvent(e gitee.CommentPullRequestEvent) {

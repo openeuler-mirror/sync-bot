@@ -431,11 +431,13 @@ func (s *Server) HandlePullRequestEvent(e gitee.PullRequestEvent) {
 			go func() {
 				// Temporarily circumvent the problem of label openeuler-cla/yes loss
 				// Waitting for the openeuler-cal/yes label to be removed before commenting on /check-cla, so delay one seconds here
-				time.Sleep(time.Second)
+				time.Sleep(time.Second * 10)
 				err := s.GiteeClient.CreateComment(owner, repo, number, "/check-cla")
 				if err != nil {
-					logrus.Warningln("Create comment failed:", err)
+					logger.Warningln("Create comment /check-cla failed:", err)
+					return
 				}
+				logger.Infoln("Create comment /check-cla")
 			}()
 		} else if util.MatchSyncBranch(targetBranch) {
 			s.AutoMerge(e)
