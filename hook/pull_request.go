@@ -391,7 +391,7 @@ func (s *Server) ClosePullRequest(owner, repo string, pr gitee.PullRequest) {
 		logger.Errorf("Clone repo failed: %v", err)
 		return
 	}
-	if r.RemoteBranchExists(sourceBranch) {
+	if util.MatchSyncBranch(sourceBranch) && r.RemoteBranchExists(sourceBranch) {
 		err = r.DeleteRemoteBranch(sourceBranch)
 		if err != nil {
 			logger.Errorln("Delete source branch failed:", err)
