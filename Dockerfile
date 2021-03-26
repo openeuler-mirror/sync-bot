@@ -25,4 +25,7 @@ WORKDIR /
 
 COPY --from=build /sync-bot /
 
+# ADD secret.conf /
+# ADD token.conf /
+
 CMD ["/sync-bot"]
