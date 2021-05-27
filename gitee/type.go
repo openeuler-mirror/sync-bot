@@ -47,6 +47,8 @@ type Enterprise struct {
 type Branch struct {
 	Name      string `json:"name"`
 	Protected bool   `json:"protected"` // only included for ?protection=true requests
+	Version   string
+	Release   string
 }
 
 type Comment struct {

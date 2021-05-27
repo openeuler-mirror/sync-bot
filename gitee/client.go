@@ -2,9 +2,11 @@ package gitee
 
 import (
 	"context"
+	"encoding/base64"
 	"errors"
 
 	giteeapi "gitee.com/openeuler/go-gitee/gitee"
+	"github.com/antihax/optional"
 	"golang.org/x/oauth2"
 )
 
@@ -31,7 +33,7 @@ type RepositoryClient interface {
 	GetBranches(owner, repo string, onlyProtected bool) ([]Branch, error)
 	GetBranch(owner, repo, branch string) (Branch, error)
 	CreateBranch(owner, repo, branch, ref string) error
-	GetFile(owner, repo, filepath, commit string) ([]byte, error)
+	GetTextFile(owner, repo, filepath, ref string) (string, error)
 }
 
 // Client interface for Gitee API
@@ -93,8 +95,20 @@ func (c *client) CreateBranch(owner, repo, branchName, ref string) error {
 	return nil
 }
 
-func (c *client) GetFile(owner, repo, filepath, commit string) ([]byte, error) {
-	panic("implement me")
+func (c *client) GetTextFile(owner, repo, filepath, ref string) (string, error) {
+	param := &giteeapi.GetV5ReposOwnerRepoContentsPathOpts{
+		Ref: optional.NewString(ref),
+	}
+	content, _, err := c.giteeAPI.RepositoriesApi.GetV5ReposOwnerRepoContentsPath(c.context, owner, repo, filepath, param)
+	if err != nil {
+		return "", errors.New(string(err.(giteeapi.GenericSwaggerError).Body()))
+	}
+
+	data, err := base64.StdEncoding.DecodeString(content.Content)
+	if err != nil {
+		return "", err
+	}
+	return string(data), nil
 }
 
 func (c *client) GetPullRequests(owner, repo string) ([]PullRequest, error) {
