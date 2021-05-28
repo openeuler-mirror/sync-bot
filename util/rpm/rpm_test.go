@@ -14,6 +14,13 @@ func TestSpec(t *testing.T) {
 		want []string
 	}{
 		{
+			name: "no Version, no Release",
+			args: args{
+				data: ``,
+			},
+			want: []string{"", ""},
+		},
+		{
 			name: "Values from literal",
 			args: args{
 				data: `
@@ -42,6 +49,24 @@ Release: %{devel_release}%{?maintenance_release}%{?pkg_release}%{?extra_release}
 `,
 			},
 			want: []string{"5.10.0", "4.0.0.13%{?extra_release}"},
+		},
+		{
+			name: "Nested macros",
+			args: args{
+				data: `
+%global baserelease 4
+%global nodejs_epoch 1
+%global nodejs_major 12
+%global nodejs_minor 18
+%global nodejs_patch 4
+%global nodejs_version %{nodejs_major}.%{nodejs_minor}.%{nodejs_patch}
+%global nodejs_release %{baserelease}
+
+Version: %{nodejs_version}
+Release: %{nodejs_release}
+`,
+			},
+			want: []string{"12.18.4", "4"},
 		},
 	}
 	for _, tt := range tests {
