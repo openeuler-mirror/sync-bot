@@ -4,23 +4,27 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/sirupsen/logrus"
-
 	"sync-bot/gitee"
 	"sync-bot/util"
+	"sync-bot/util/rpm"
+
+	"github.com/sirupsen/logrus"
 )
 
-func (s *Server) replySyncCheck(owner string, repo string, number int, targetBranch string) {
+func (s *Server) greeting(owner string, repo string, number int, targetBranch string) {
+	logger := logrus.WithFields(logrus.Fields{
+		"owner":        owner,
+		"repo":         repo,
+		"number":       number,
+		"targetBranch": targetBranch,
+	})
 	branches, err := s.GiteeClient.GetBranches(owner, repo, true)
 	if err != nil {
-		logrus.WithFields(logrus.Fields{
-			"err": err,
-		}).Errorln("Get Branches failed")
+		logger.Errorln("Get Branches failed:", err)
 		return
 	}
-
-	// convert branch to branch URL
 	for i, branch := range branches {
+		// convert branch to branch URL
 		if branches[i].Name == targetBranch {
 			// mark target branch of current pull request
 			branches[i].Name = fmt.Sprintf("__*__ [%s](https://gitee.com/%s/%s/tree/%s)",
@@ -28,6 +32,17 @@ func (s *Server) replySyncCheck(owner string, repo string, number int, targetBra
 		} else {
 			branches[i].Name = fmt.Sprintf("[%s](https://gitee.com/%s/%s/tree/%s)",
 				branch.Name, owner, repo, branch.Name)
+		}
+		// extract Version and Release from spec file
+		spec, err1 := s.GiteeClient.GetTextFile(owner, repo, repo+".spec", branch.Name)
+		if err1 != nil {
+			logger.Errorln("Get spec file failed:", err)
+			continue
+		}
+		s := rpm.NewSpec(spec)
+		if s != nil {
+			branches[i].Version = s.Version()
+			branches[i].Release = s.Release()
 		}
 	}
 
@@ -175,7 +190,7 @@ func (s *Server) NotePullRequest(e gitee.CommentPullRequestEvent) {
 
 	if util.MatchSyncCheck(comment) {
 		logger.Infoln("Receive /sync-check command")
-		s.replySyncCheck(owner, repo, number, targetBranch)
+		s.greeting(owner, repo, number, targetBranch)
 		return
 	}
 

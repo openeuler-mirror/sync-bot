@@ -24,7 +24,7 @@ func (s *Server) OpenPullRequest(e gitee.PullRequestEvent) {
 		"number": number,
 		"title":  title,
 	}).Infoln("OpenPullRequest")
-	s.replySyncCheck(owner, repo, number, targetBranch)
+	s.greeting(owner, repo, number, targetBranch)
 }
 
 func (s *Server) MergePullRequest(e gitee.PullRequestEvent) {

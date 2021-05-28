@@ -20,7 +20,7 @@ func Test_executeTemplate(t *testing.T) {
 		wantErr bool
 	}{
 		{
-			name: "replySyncCheck",
+			name: "greeting",
 			args: args{
 				tmpl: replySyncCheckTmpl,
 				data: []struct {

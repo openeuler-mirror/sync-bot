@@ -7,17 +7,18 @@ import (
 
 const (
 	replySyncCheck = `
-当前仓库包含以下 __保护分支__
+当前仓库存在以下 __保护分支__ ：
 | Protected Branch | Version | Release |
 |---|---|---|
 {{- range .}}
-|{{.Name}}| | |
+|{{.Name}}|{{.Version}}|{{.Release}}|
 {{- end}}
 
-评论 ` + "`/sync <branch1> <branch2> ...`" + ` 可以将当前 PR 的修改应用到其它分支(创建同步操作 PR)：
+评论 ` + "`/sync <branch1> <branch2> ...`" + ` 可将当前 Pull Request 修改同步到其它分支（通过创建同步 Pull Request）：
 a) 如果当前 PR 是 Open 状态，同步操作将延迟到 PR 被合并时执行；
 b) 如果当前 PR 已经 Merged，将立即执行同步操作。
-(/sync 命令可以同时指定多个分支)
+
+> 注意：/sync 命令可以指定同步多个分支，仅最后一个 /sync 命令生效
 `
 
 	replySync = `
@@ -77,7 +78,7 @@ In response to [this]({{.URL}}):
 )
 
 var (
-	replySyncCheckTmpl = template.Must(template.New("replySyncCheck").Parse(replySyncCheck))
+	replySyncCheckTmpl = template.Must(template.New("greeting").Parse(replySyncCheck))
 	replySyncTmpl      = template.Must(template.New("replySync").Parse(replySync))
 	syncPRBodyTmpl     = template.Must(template.New("syncPRBody").Parse(syncPRBody))
 	syncResultTmpl     = template.Must(template.New("syncPRBody").Parse(syncResult))
