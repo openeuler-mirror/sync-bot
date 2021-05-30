@@ -85,11 +85,6 @@ var (
 	replyCloseTmpl     = template.Must(template.New("syncPRBody").Parse(replyClose))
 )
 
-const (
-	branchExist    = "sync operation will be performed"
-	branchNonExist = "branch not found, ignored"
-)
-
 type branchStatus struct {
 	Name   string
 	Status string

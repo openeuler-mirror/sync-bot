@@ -146,7 +146,7 @@ func (s *Server) pick(owner string, repo string, opt *SyncCmdOption, branchSet m
 			})
 			continue
 		}
-		tempBranch := fmt.Sprintf("sync-pr%v-%v-to-%v", number, sourceBranch, branch)
+		_ = r.Clean()
 		err = r.Checkout("origin/" + branch)
 		if err != nil {
 			status = append(status, syncStatus{
@@ -155,6 +155,7 @@ func (s *Server) pick(owner string, repo string, opt *SyncCmdOption, branchSet m
 			})
 			continue
 		}
+		tempBranch := fmt.Sprintf("sync-pr%v-%v-to-%v", number, sourceBranch, branch)
 		err = r.CheckoutNewBranch(tempBranch, true)
 		if err != nil {
 			status = append(status, syncStatus{
@@ -173,9 +174,10 @@ func (s *Server) pick(owner string, repo string, opt *SyncCmdOption, branchSet m
 		}
 		err = r.CherryPick(firstSha, lastSha, git.Theirs)
 		if err != nil {
+			logrus.Errorln("Cherry pick failed:", err.Error())
 			status = append(status, syncStatus{
 				Name:   branch,
-				Status: err.Error(),
+				Status: syncFailed,
 			})
 			continue
 		}
@@ -207,7 +209,7 @@ func (s *Server) pick(owner string, repo string, opt *SyncCmdOption, branchSet m
 			st = err.Error()
 		} else {
 			logrus.Infoln("Create PullRequest:", num)
-			st = "Create sync PR"
+			st = createdPR
 			url = fmt.Sprintf("https://gitee.com/%v/%v/pulls/%v", owner, repo, num)
 		}
 		status = append(status, syncStatus{Name: branch, Status: st, PR: url})
