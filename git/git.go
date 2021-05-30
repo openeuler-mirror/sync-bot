@@ -210,9 +210,15 @@ func (r *Repo) Status() (string, error) {
 
 // Clean clean the repo.
 func (r *Repo) Clean() error {
-	logrus.Infof("reset checkout clean")
-	co := r.gitCommand("reset", "--")
+	logrus.Infof("cancel possible intermediate state of cherry-pick")
+	co := r.gitCommand("cherry-pick", "--abort")
 	out, err := co.CombinedOutput()
+	if err != nil {
+		logrus.Warningln("cherry-pick --abort failed:", err)
+	}
+	logrus.Infof("reset checkout clean")
+	co = r.gitCommand("reset", "--")
+	out, err = co.CombinedOutput()
 	if err != nil {
 		return fmt.Errorf("reset failed, output: %q, error: %v", string(out), err)
 	}
@@ -265,12 +271,11 @@ func (r *Repo) CheckoutNewBranch(branch string, force bool) error {
 // CherryPick cherry-pick from commits with strategyOption
 func (r *Repo) CherryPick(first, last string, strategyOption StrategyOption) error {
 	logrus.Infof("Cherry Pick from %s to %s.", first, last)
-	co := r.gitCommand("cherry-pick", "--keep-redundant-commits", "--mainline=1", "-x",
-		"-X", string(strategyOption), fmt.Sprintf("%s^..%s", first, last))
+	co := r.gitCommand("cherry-pick", "-x", fmt.Sprintf("%s^..%s", first, last))
 	out, err := co.CombinedOutput()
 	if err != nil {
-		logrus.Errorf("Pushing failed with error: %v and output: %q", err, string(out))
-		return fmt.Errorf("pushing failed, output: %q, error: %v", string(out), err)
+		logrus.Errorf("Cherry pick failed with error: %v and output: %q", err, string(out))
+		return fmt.Errorf("cherry pick failed, output: %q, error: %v", string(out), err)
 	}
 	return nil
 }
