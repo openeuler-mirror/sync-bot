@@ -14,11 +14,13 @@ const (
 |{{.Name}}|{{.Version}}|{{.Release}}|
 {{- end}}
 
-评论 ` + "`/sync <branch1> <branch2> ...`" + ` 可将当前 Pull Request 修改同步到其它分支（通过创建同步 Pull Request）：
-a) 如果当前 PR 是 Open 状态，同步操作将延迟到 PR 被合并时执行；
-b) 如果当前 PR 已经 Merged，将立即执行同步操作。
+评论 ` + "`/sync <branch1> <branch2> ...`" + ` 可将当前 PR 修改同步到其它分支（创建同步 PR）：
+a) 如果当前 PR 是 Open 状态，同步操作将延迟到 PR 被合并时执行
+b) 如果当前 PR 已经 Merged，将立即执行同步操作
 
-> 注意：/sync 命令可以指定同步多个分支，仅最后一个 /sync 命令生效
+> 注意：
+> 1. /sync 命令可以指定同步到多个分支，仅最后一个 /sync 命令生效
+> 2. 如果创建的同步 PR 不正确，可通过向同步 PR 的源分支提交轻量级 PR 完善，或使用 /close 命令关闭
 `
 
 	replySync = `
