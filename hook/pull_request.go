@@ -422,7 +422,7 @@ func (s *Server) HandlePullRequestEvent(e gitee.PullRequestEvent) {
 
 	// TODO: need to be configurable
 	// ignoring repo in openeuler
-	if owner == "openeuler" {
+	if owner == "openeuler" && repo != "docs" {
 		logger.Infoln("Ignoring repo in openeuler")
 		return
 	}
