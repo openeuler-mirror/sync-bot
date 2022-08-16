@@ -11,7 +11,7 @@ RUN go build -o /sync-bot
 
 
 # Final stage
-FROM centos:8
+FROM openeuler/openeuler:22.03-lts
 
 RUN dnf -y install git
 
