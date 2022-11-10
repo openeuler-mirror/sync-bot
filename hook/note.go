@@ -233,7 +233,8 @@ func (s *Server) HandleNoteEvent(e gitee.CommentPullRequestEvent) {
 
 	// TODO: need to be configurable
 	// ignore repo in openeuler
-	if owner == "openeuler" && repo != "docs" && repo != "kernel" {
+	needSyncProjects := GetSyncProjectOfOpenEuler()
+	if owner == "openeuler" && !needSyncProjects[repo] {
 		logger.Infoln("Ignore repo in openeuler")
 		return
 	}

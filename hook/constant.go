@@ -6,3 +6,11 @@ const (
 	createdPR      = "创建同步 PR"
 	syncFailed     = "同步失败：请手动创建 PR 进行同步，我们会继续完善分支之间同步操作，尽量避免同步失败的情况"
 )
+
+func GetSyncProjectOfOpenEuler() map[string]bool {
+	return map[string]bool{
+		"kernel":               true,
+		"docs":                 true,
+		"yocto-meta-openeuler": true,
+	}
+}
