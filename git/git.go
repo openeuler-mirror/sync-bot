@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 	"sync"
 	"time"
 
@@ -129,6 +130,12 @@ func (c *Client) Clone(owner, repo string) (*Repo, error) {
 		if err2 := os.MkdirAll(filepath.Dir(dir), os.ModePerm); err2 != nil && !os.IsExist(err2) {
 			return nil, err2
 		}
+
+		// special for big size repos
+		if owner == "openeuler" && repo == "kernel" {
+			fullName = "openeuler-sync-bot" + "/" + repo
+		}
+
 		remote := fmt.Sprintf("%s/%s.git", base, fullName)
 		if b, err2 := retryCmd("", c.git, "clone", remote, dir); err2 != nil {
 			return nil, fmt.Errorf("git dir clone error: %v. output: %s", err2, string(b))
@@ -136,6 +143,20 @@ func (c *Client) Clone(owner, repo string) (*Repo, error) {
 	} else if err != nil {
 		return nil, err
 	} else {
+
+		if owner == "openeuler" && repo == "kernel" {
+			return &Repo{
+				dir:   dir,
+				git:   c.git,
+				host:  c.host,
+				base:  base,
+				owner: owner,
+				repo:  repo,
+				user:  user,
+				pass:  pass,
+			}, nil
+		}
+
 		// Cache hit. Do a git fetch to keep updated.
 		logrus.Infof("Fetching %s.", fullName)
 		if b, err := retryCmd(dir, c.git, "fetch"); err != nil {
@@ -195,6 +216,44 @@ func (r *Repo) gitCommand(arg ...string) *exec.Cmd {
 	}
 	logrus.WithField("args", arg).WithField("dir", cmd.Dir).Debug("Constructed git command")
 	return cmd
+}
+
+// PullUpstream git pull upstream branch
+func (r *Repo) PullUpstream(branch string) error {
+	co := r.gitCommand("pull", "upstream", branch)
+	b, err := co.CombinedOutput()
+	if err != nil {
+		return fmt.Errorf("git pull upstream failed, output: %s, err: %v", string(b), err)
+	}
+
+	return nil
+}
+
+// ListRemote list git branch
+func (r *Repo) ListRemote() (bool, error) {
+	co := r.gitCommand("remote", "-v")
+	b, err := co.CombinedOutput()
+	if err != nil {
+		return false, fmt.Errorf("git remote failed, output: %s, err: %v", string(b), err)
+	}
+
+	if strings.Contains(string(b), "upstream") {
+		return true, nil
+	} else {
+		return false, nil
+	}
+}
+
+// AddRemote add a upstream repo
+func (r *Repo) AddRemote(remotePath string) error {
+	logrus.Infof("Add remote %s", remotePath)
+	co := r.gitCommand("remote", "add", "upstream", remotePath)
+	b, err := co.CombinedOutput()
+	if err != nil {
+		return fmt.Errorf("git remote failed, output: %s, err: %v", string(b), err)
+	}
+
+	return nil
 }
 
 // Status show the working tree status
@@ -297,6 +356,12 @@ func (r *Repo) Push(branch string, force bool) error {
 	}
 	logrus.Infof("Pushing to '%s/%s (branch: %s)'.", r.owner, r.repo, branch)
 	remote := fmt.Sprintf("https://%s:%s@%s/%s/%s", r.user, r.pass, r.host, r.owner, r.repo)
+
+	// check if repo is one of the big repos
+	if r.owner == "openeuler" && r.repo == "kernel" {
+		remote = fmt.Sprintf("https://%s:%s@%s/%s/%s", r.user, r.pass, r.host, "openeuler-sync-bot", r.repo)
+	}
+
 	var co *exec.Cmd
 	if force {
 		co = r.gitCommand("push", "--force", remote, branch)
