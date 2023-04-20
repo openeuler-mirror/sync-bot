@@ -146,15 +146,67 @@ func (s *Server) pick(owner string, repo string, opt *SyncCmdOption, branchSet m
 			})
 			continue
 		}
-		_ = r.Clean()
-		err = r.Checkout("origin/" + branch)
-		if err != nil {
-			status = append(status, syncStatus{
-				Name:   branch,
-				Status: err.Error(),
-			})
-			continue
+
+		// pull for big repos by using upstream repos
+		if owner == "openeuler" && repo == "kernel" {
+			bigRemote := fmt.Sprintf("%s/%s.git", "https://gitee.com", owner+"/"+repo)
+
+			// check remote
+			if hasUpstream, _ := r.ListRemote(); !hasUpstream {
+				// add remote
+				err = r.AddRemote(bigRemote)
+				if err != nil {
+					status = append(status, syncStatus{
+						Name:   branch,
+						Status: err.Error(),
+					})
+					continue
+				}
+			}
+
+			_ = r.Clean()
+			// git checkout branch
+			err = r.Checkout(branch)
+			if err != nil {
+				status = append(status, syncStatus{
+					Name:   branch,
+					Status: err.Error(),
+				})
+				continue
+			}
+
+			// git pull
+			err = r.PullUpstream(branch)
+			if err != nil {
+				status = append(status, syncStatus{
+					Name:   branch,
+					Status: err.Error(),
+				})
+				continue
+			}
+
+			// git push
+			err = r.Push(branch, true)
+			if err != nil {
+				status = append(status, syncStatus{
+					Name:   branch,
+					Status: err.Error(),
+				})
+				continue
+			}
+
+		} else {
+			_ = r.Clean()
+			err = r.Checkout("origin/" + branch)
+			if err != nil {
+				status = append(status, syncStatus{
+					Name:   branch,
+					Status: err.Error(),
+				})
+				continue
+			}
 		}
+
 		tempBranch := fmt.Sprintf("sync-pr%v-%v-to-%v", number, sourceBranch, branch)
 		err = r.CheckoutNewBranch(tempBranch, true)
 		if err != nil {
@@ -192,7 +244,11 @@ func (s *Server) pick(owner string, repo string, opt *SyncCmdOption, branchSet m
 		var num int
 		sleepyTime := time.Second
 		for i := 0; i < 5; i++ {
-			// create pull request
+
+			if owner == "openeuler" && repo == "kernel" {
+				tempBranch = "openeuler-sync-bot:"+tempBranch
+			}
+			
 			num, err = s.GiteeClient.CreatePullRequest(owner, repo, title, body, tempBranch, branch, true)
 			if err != nil {
 				logrus.WithError(err).Infof("Create pull request: retrying %d times", i+1)
