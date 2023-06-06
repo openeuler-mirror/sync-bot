@@ -165,6 +165,41 @@ func (s *Server) pick(owner string, repo string, opt *SyncCmdOption, branchSet m
 			}
 
 			_ = r.Clean()
+
+			// create branch in fork repo when it exists in origin repo but not exists in fork repo
+			// get fork repo's branches
+			forkBranches, err := s.GiteeClient.GetBranches("openeuler-sync-bot", repo, false)
+			if err != nil {
+				status = append(status, syncStatus{
+					Name:   branch,
+					Status: err.Error(),
+				})
+				continue
+			}
+
+			// create not existed branches
+			for _, fb := range forkBranches {
+				if branch != fb.Name {
+					err = r.FetchUpstream(fmt.Sprintf("upstream %s", branch))
+					if err != nil {
+						status = append(status, syncStatus{
+							Name:   branch,
+							Status: err.Error(),
+						})
+						continue
+					}
+
+					err = r.CreateBranchAndPushToOrigin(branch, fmt.Sprintf("upstream %s", branch))
+					if err != nil {
+						status = append(status, syncStatus{
+							Name:   branch,
+							Status: err.Error(),
+						})
+						continue
+					}
+				}
+			}
+
 			// git checkout branch
 			err = r.Checkout(branch)
 			if err != nil {
@@ -246,9 +281,9 @@ func (s *Server) pick(owner string, repo string, opt *SyncCmdOption, branchSet m
 		for i := 0; i < 5; i++ {
 
 			if owner == "openeuler" && repo == "kernel" {
-				tempBranch = "openeuler-sync-bot:"+tempBranch
+				tempBranch = "openeuler-sync-bot:" + tempBranch
 			}
-			
+
 			num, err = s.GiteeClient.CreatePullRequest(owner, repo, title, body, tempBranch, branch, true)
 			if err != nil {
 				logrus.WithError(err).Infof("Create pull request: retrying %d times", i+1)

@@ -256,6 +256,36 @@ func (r *Repo) AddRemote(remotePath string) error {
 	return nil
 }
 
+// FetchUpstream fetch the upstream branch to local
+func (r *Repo) FetchUpstream(upstream string) error {
+	logrus.Infof("fetch upstream branch %s", upstream)
+	co := r.gitCommand("fetch", upstream)
+	b, err := co.CombinedOutput()
+	if err != nil {
+		return fmt.Errorf("git fetch %s failed, output: %s, err: %v", upstream, string(b), err)
+	}
+
+	return nil
+}
+
+// CreateBranchAndPushToOrigin create a branch by upstream/xx
+func (r *Repo) CreateBranchAndPushToOrigin(branch, upstream string) error {
+	logrus.Infof("Create new branch from upstream")
+	co := r.gitCommand("checkout", "-b", branch, upstream)
+	b, err := co.CombinedOutput()
+	if err != nil {
+		return fmt.Errorf("create branch by upstream failed, output: %s, err: %v", string(b), err)
+	}
+
+	po := r.gitCommand("push", "-u", "origin", branch)
+	p, err := po.CombinedOutput()
+	if err != nil {
+		return fmt.Errorf("git push branch to origin failed, output: %s, err: %v", string(p), err)
+	}
+
+	return nil
+}
+
 // Status show the working tree status
 func (r *Repo) Status() (string, error) {
 	logrus.Infof("Workspace status")
