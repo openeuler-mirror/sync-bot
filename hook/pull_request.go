@@ -178,25 +178,28 @@ func (s *Server) pick(owner string, repo string, opt *SyncCmdOption, branchSet m
 			}
 
 			// create not existed branches
+			forkBranchesList := make(map[string]string, len(forkBranches))
 			for _, fb := range forkBranches {
-				if branch != fb.Name {
-					err = r.FetchUpstream(fmt.Sprintf("upstream %s", branch))
-					if err != nil {
-						status = append(status, syncStatus{
-							Name:   branch,
-							Status: err.Error(),
-						})
-						continue
-					}
+				forkBranchesList[fb.Name] = fb.Name
+			}
 
-					err = r.CreateBranchAndPushToOrigin(branch, fmt.Sprintf("upstream %s", branch))
-					if err != nil {
-						status = append(status, syncStatus{
-							Name:   branch,
-							Status: err.Error(),
-						})
-						continue
-					}
+			if _, ok := forkBranchesList[branch]; !ok {
+				err = r.FetchUpstream(branch)
+				if err != nil {
+					status = append(status, syncStatus{
+						Name:   branch,
+						Status: err.Error(),
+					})
+					continue
+				}
+
+				err = r.CreateBranchAndPushToOrigin(branch, fmt.Sprintf("upstream/%s", branch))
+				if err != nil {
+					status = append(status, syncStatus{
+						Name:   branch,
+						Status: err.Error(),
+					})
+					continue
 				}
 			}
 

@@ -257,12 +257,12 @@ func (r *Repo) AddRemote(remotePath string) error {
 }
 
 // FetchUpstream fetch the upstream branch to local
-func (r *Repo) FetchUpstream(upstream string) error {
-	logrus.Infof("fetch upstream branch %s", upstream)
-	co := r.gitCommand("fetch", upstream)
+func (r *Repo) FetchUpstream(branch string) error {
+	logrus.Infof("fetch upstream branch %s", branch)
+	co := r.gitCommand("fetch", "upstream", branch)
 	b, err := co.CombinedOutput()
 	if err != nil {
-		return fmt.Errorf("git fetch %s failed, output: %s, err: %v", upstream, string(b), err)
+		return fmt.Errorf("git fetch %s failed, output: %s, err: %v", branch, string(b), err)
 	}
 
 	return nil
