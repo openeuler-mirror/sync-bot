@@ -281,11 +281,12 @@ func (s *Server) pick(owner string, repo string, opt *SyncCmdOption, branchSet m
 		}
 		var num int
 		sleepyTime := time.Second
-		for i := 0; i < 5; i++ {
 
-			if owner == "openeuler" && repo == "kernel" {
-				tempBranch = "openeuler-sync-bot:" + tempBranch
-			}
+		if owner == "openeuler" && repo == "kernel" {
+			tempBranch = "openeuler-sync-bot:" + tempBranch
+		}
+		
+		for i := 0; i < 5; i++ {
 
 			num, err = s.GiteeClient.CreatePullRequest(owner, repo, title, body, tempBranch, branch, true)
 			if err != nil {
