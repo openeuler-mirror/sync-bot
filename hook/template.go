@@ -53,6 +53,13 @@ In response to [this]({{.URL}}):
 |[{{slice .Sha 0 8}}]({{.HTMLURL}})|{{.Commit.Author.Date}}|{{.Commit.Message}}|
 {{- end}}
 `
+	syncKernelPRBody = `
+### 1. Origin pull request:
+{{.PR}}
+
+### 2. Original pull request body:
+{{.Body}}
+`
 
 	syncResult = `
 In response to [this]({{.URL}}):
@@ -80,11 +87,12 @@ In response to [this]({{.URL}}):
 )
 
 var (
-	replySyncCheckTmpl = template.Must(template.New("greeting").Parse(replySyncCheck))
-	replySyncTmpl      = template.Must(template.New("replySync").Parse(replySync))
-	syncPRBodyTmpl     = template.Must(template.New("syncPRBody").Parse(syncPRBody))
-	syncResultTmpl     = template.Must(template.New("syncPRBody").Parse(syncResult))
-	replyCloseTmpl     = template.Must(template.New("syncPRBody").Parse(replyClose))
+	replySyncCheckTmpl   = template.Must(template.New("greeting").Parse(replySyncCheck))
+	replySyncTmpl        = template.Must(template.New("replySync").Parse(replySync))
+	syncPRBodyTmpl       = template.Must(template.New("syncPRBody").Parse(syncPRBody))
+	syncPRBodyTmplKernel = template.Must(template.New("syncKernelPRBody").Parse(syncKernelPRBody))
+	syncResultTmpl       = template.Must(template.New("syncPRBody").Parse(syncResult))
+	replyCloseTmpl       = template.Must(template.New("syncPRBody").Parse(replyClose))
 )
 
 type branchStatus struct {
