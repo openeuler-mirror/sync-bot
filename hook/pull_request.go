@@ -405,7 +405,7 @@ func (s *Server) sync(owner string, repo string, pr gitee.PullRequest, user stri
 			Body string
 		}{
 			PR:   pr.HTMLURL,
-			Body: pr.Body[:65535],
+			Body: pr.Body,
 		}
 
 		body, err = executeTemplate(syncPRBodyTmplKernel, data)
