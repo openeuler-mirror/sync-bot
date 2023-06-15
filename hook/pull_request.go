@@ -285,7 +285,7 @@ func (s *Server) pick(owner string, repo string, opt *SyncCmdOption, branchSet m
 		if owner == "openeuler" && repo == "kernel" {
 			tempBranch = "openeuler-sync-bot:" + tempBranch
 		}
-		
+
 		for i := 0; i < 5; i++ {
 
 			num, err = s.GiteeClient.CreatePullRequest(owner, repo, title, body, tempBranch, branch, true)
@@ -397,23 +397,44 @@ func (s *Server) sync(owner string, repo string, pr gitee.PullRequest, user stri
 
 	title := fmt.Sprintf("[sync] PR-%v: %v", number, pr.Title)
 
-	data := struct {
-		PR      string
-		Issues  []gitee.Issue
-		Commits []gitee.PullRequestCommit
-	}{
-		PR:      pr.HTMLURL,
-		Issues:  issues,
-		Commits: commits,
-	}
+	var body string
+	var data interface{}
+	if owner == "openeuler" && repo == "kernel" {
+		data = struct {
+			PR   string
+			Body string
+		}{
+			PR:   pr.HTMLURL,
+			Body: pr.Body[:65535],
+		}
 
-	body, err := executeTemplate(syncPRBodyTmpl, data)
-	if err != nil {
-		logrus.WithFields(logrus.Fields{
-			"tmpl": syncPRBodyTmpl,
-			"data": data,
-		}).Errorln("Execute template failed:", err)
-		return err
+		body, err = executeTemplate(syncPRBodyTmplKernel, data)
+		if err != nil {
+			logrus.WithFields(logrus.Fields{
+				"tmpl": syncPRBodyTmplKernel,
+				"data": data,
+			}).Errorln("Execute template failed:", err)
+			return err
+		}
+	} else {
+		data = struct {
+			PR      string
+			Issues  []gitee.Issue
+			Commits []gitee.PullRequestCommit
+		}{
+			PR:      pr.HTMLURL,
+			Issues:  issues,
+			Commits: commits,
+		}
+
+		body, err = executeTemplate(syncPRBodyTmpl, data)
+		if err != nil {
+			logrus.WithFields(logrus.Fields{
+				"tmpl": syncPRBodyTmpl,
+				"data": data,
+			}).Errorln("Execute template failed:", err)
+			return err
+		}
 	}
 
 	var status []syncStatus
