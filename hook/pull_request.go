@@ -204,7 +204,7 @@ func (s *Server) pick(owner string, repo string, opt *SyncCmdOption, branchSet m
 			}
 
 			// git checkout branch
-			err = r.Checkout(branch)
+			err = r.Checkout("origin/" + branch)
 			if err != nil {
 				status = append(status, syncStatus{
 					Name:   branch,
@@ -214,7 +214,16 @@ func (s *Server) pick(owner string, repo string, opt *SyncCmdOption, branchSet m
 			}
 
 			// git pull
-			err = r.PullUpstream(branch)
+			err = r.FetchUpstream(branch)
+			if err != nil {
+				status = append(status, syncStatus{
+					Name:   branch,
+					Status: err.Error(),
+				})
+				continue
+			}
+
+			err = r.MergeUpstream(branch)
 			if err != nil {
 				status = append(status, syncStatus{
 					Name:   branch,
@@ -224,7 +233,7 @@ func (s *Server) pick(owner string, repo string, opt *SyncCmdOption, branchSet m
 			}
 
 			// git push
-			err = r.Push(branch, true)
+			err = r.PushUpstreamToOrigin(branch)
 			if err != nil {
 				status = append(status, syncStatus{
 					Name:   branch,
