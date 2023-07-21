@@ -268,6 +268,31 @@ func (r *Repo) FetchUpstream(branch string) error {
 	return nil
 }
 
+// MergeUpstream merge the upstream branch to local
+func (r *Repo) MergeUpstream(branch string) error {
+	logrus.Infof("merge upstream branch %s", branch)
+	co := r.gitCommand("merge", fmt.Sprintf("upstream/%s", branch))
+	b, err := co.CombinedOutput()
+	if err != nil {
+		return fmt.Errorf("git merge %s failed, output: %s, err: %v", branch, string(b), err)
+	}
+
+	return nil
+}
+
+// PushUpstreamToOrigin push the upstream changes to origin
+func (r *Repo) PushUpstreamToOrigin(branch string) error {
+	var co *exec.Cmd
+	co = r.gitCommand("push", "origin", fmt.Sprintf("HEAD:%s", branch))
+
+	out, err := co.CombinedOutput()
+	if err != nil {
+		logrus.Errorf("Pushing failed with error: %v and output: %q", err, string(out))
+		return fmt.Errorf("pushing failed, output: %q, error: %v", string(out), err)
+	}
+	return nil
+}
+
 // CreateBranchAndPushToOrigin create a branch by upstream/xx
 func (r *Repo) CreateBranchAndPushToOrigin(branch, upstream string) error {
 	logrus.Infof("Create new branch from upstream")
