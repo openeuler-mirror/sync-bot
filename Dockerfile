@@ -24,6 +24,7 @@ EXPOSE 8765
 WORKDIR /
 
 COPY --from=build /sync-bot /
+COPY --from=build /drop_branches.config /
 
 # ADD secret.conf /
 # ADD token.conf /

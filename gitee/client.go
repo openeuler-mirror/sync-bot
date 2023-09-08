@@ -1,6 +1,8 @@
 package gitee
 
 import (
+	"bufio"
+	"os"
 	"context"
 	"encoding/base64"
 	"errors"
@@ -8,6 +10,7 @@ import (
 	giteeapi "gitee.com/openeuler/go-gitee/gitee"
 	"github.com/antihax/optional"
 	"golang.org/x/oauth2"
+	"github.com/deckarep/golang-set"
 )
 
 // CommentClient interface for comment related API actions
@@ -57,8 +60,23 @@ func (c *client) GetBranches(owner, repo string, onlyProtected bool) ([]Branch, 
 		return nil, err
 	}
 	branches := make([]Branch, 0)
+
+	file, err := os.Open("drop_branches.config")
+	if err != nil {
+		return nil, err
+	}
+	defer file.Close()
+	drop_branches := mapset.NewSet()
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		drop_branches.Add(scanner.Text())
+	}
+	if err := scanner.Err(); err != nil {
+		return nil, err
+	}
+
 	for _, branch := range bs {
-		if onlyProtected && !branch.Protected {
+		if onlyProtected && !branch.Protected && drop_branches.Contains(branch.Name) {
 			continue
 		}
 		branches = append(branches, Branch{
