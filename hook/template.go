@@ -8,7 +8,7 @@ import (
 const (
 	replySyncCheck = `
 当前仓库存在以下 __保护分支__ ：
-| Protected Branch | Version | Release |
+| 保护分支名 | Version | Release |
 |---|---|---|
 {{- range .}}
 |{{.Name}}|{{.Version}}|{{.Release}}|
