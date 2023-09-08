@@ -18,7 +18,7 @@ func (s *Server) greeting(owner string, repo string, number int, targetBranch st
 		"number":       number,
 		"targetBranch": targetBranch,
 	})
-	branches, err := s.GiteeClient.GetBranches(owner, repo, true)
+	branches, err := s.GiteeClient.GetBranches(owner, repo, false)
 	if err != nil {
 		logger.Errorln("Get Branches failed:", err)
 		return
