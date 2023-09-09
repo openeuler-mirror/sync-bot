@@ -13,5 +13,5 @@
 
 #### 使用说明
 
-#### 自测试说明
+#### 测试说明：https://sync-bot.test.osinfra.cn/hook
 
