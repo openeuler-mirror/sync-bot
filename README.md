@@ -13,5 +13,7 @@
 
 #### 使用说明
 
-#### 测试说明：https://sync-bot.test.osinfra.cn/hook
+#### 测试说明：
+     1.将个人fix bug代码提交到test分支；（系统会自动触发构建并拉起服务）
+     2.将服务配置到个人仓库webhook：https://sync-bot.test.osinfra.cn/hook
 
