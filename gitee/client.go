@@ -57,7 +57,13 @@ func (c *client) GetBranches(owner, repo string, onlyProtected bool) ([]Branch, 
 		return nil, err
 	}
 	branches := make([]Branch, 0)
+
+	drop_branches := GetDroppedBranches()
+
 	for _, branch := range bs {
+		if drop_branches[branch.Name] {
+			continue
+		}
 		if onlyProtected && !branch.Protected {
 			continue
 		}
