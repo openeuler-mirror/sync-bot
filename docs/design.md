@@ -104,7 +104,7 @@ __挑选同步__ 类似 git-cherry-pick 操作，目标指将源版本分支中�
 sync-bot cli 能够从源版本分支挑选某个 commit 或者某段 commit 区间，应用到目标版本分支上；sync-bot service 关注的是当前的 PR，所以是将当前 PR 包含的 commit 同步到目标分支，具体方式是识别当前 PR (可能包含多个 commit）包含的文件增加、删除、修改操作，将涉及的文件的最终状态（最后一个 commit）同步到目标版本分支。
 
 
-## sync-bot cli
+## sync-bot cli -- 未实现
 
 命令行工具为二进制可执行程序，命名为 `sync-bot-cli` ，优先考虑在 Linux 环境上运行。命令行工具包含以下子命令：
 
