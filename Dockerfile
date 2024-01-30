@@ -1,5 +1,5 @@
 # Build stage
-FROM golang:1.15.5 AS build
+FROM golang:1.17.3 AS build
 
 ADD . /go-build
 
