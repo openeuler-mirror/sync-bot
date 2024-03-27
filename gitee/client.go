@@ -196,25 +196,27 @@ func (c *client) ListPullRequestCommits(owner, repo string, number int) ([]PullR
 		return nil, err
 	}
 	for _, c := range cs {
-		fmt.Println("[ListPullRequestCommits:200]", c);
+		fmt.Println("[ListPullRequestCommits:200]", c)
+		var author User
 		if c.Author == nil {
-			c.Author = User{
+			author = User{
 				Email:    "",
-				HtmlUrl:  "",
-				Id:       0,
+				HTMLURL:  "",
+				ID:       0,
 				Name:     "",
-				Login:    "",
+				Username:    "",
 			}
-		}
-		
-		commit := PullRequestCommit{
-			Author: User{
+		} else {
+			author = User{
 				Email:    c.Author.Email,
 				HTMLURL:  c.Author.HtmlUrl,
 				ID:       int(c.Author.Id),
 				Name:     c.Author.Name,
 				Username: c.Author.Login,
-			},
+			}
+		}
+		commit := PullRequestCommit{
+			Author:      author,
 			CommentsURL: c.CommentsUrl,
 			Commit: GitCommit{
 				Author: GitUser{
