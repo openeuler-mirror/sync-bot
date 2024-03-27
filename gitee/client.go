@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/base64"
 	"errors"
+	"fmt"
 
 	giteeapi "gitee.com/openeuler/go-gitee/gitee"
 	"github.com/antihax/optional"
@@ -195,6 +196,17 @@ func (c *client) ListPullRequestCommits(owner, repo string, number int) ([]PullR
 		return nil, err
 	}
 	for _, c := range cs {
+		fmt.Println("[ListPullRequestCommits:200]", c);
+		if c.Author == nil {
+			c.Author = User{
+				Email:    "",
+				HtmlUrl:  "",
+				Id:       0,
+				Name:     "",
+				Login:    "",
+			}
+		}
+		
 		commit := PullRequestCommit{
 			Author: User{
 				Email:    c.Author.Email,
