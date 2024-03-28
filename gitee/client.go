@@ -195,14 +195,26 @@ func (c *client) ListPullRequestCommits(owner, repo string, number int) ([]PullR
 		return nil, err
 	}
 	for _, c := range cs {
-		commit := PullRequestCommit{
-			Author: User{
+		var author User
+		if c.Author == nil {
+			author = User{
+				Email:    "",
+				HTMLURL:  "",
+				ID:       0,
+				Name:     "",
+				Username:    "",
+			}
+		} else {
+			author = User{
 				Email:    c.Author.Email,
 				HTMLURL:  c.Author.HtmlUrl,
 				ID:       int(c.Author.Id),
 				Name:     c.Author.Name,
 				Username: c.Author.Login,
-			},
+			}
+		}
+		commit := PullRequestCommit{
+			Author:      author,
 			CommentsURL: c.CommentsUrl,
 			Commit: GitCommit{
 				Author: GitUser{
