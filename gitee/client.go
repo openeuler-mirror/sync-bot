@@ -202,7 +202,7 @@ func (c *client) ListPullRequestCommits(owner, repo string, number int) ([]PullR
 				HTMLURL:  "",
 				ID:       0,
 				Name:     "",
-				Username:    "",
+				Username: "",
 			}
 		} else {
 			author = User{
@@ -252,7 +252,7 @@ func (c *client) ListPullRequestCommits(owner, repo string, number int) ([]PullR
 }
 
 func (c *client) ListPullRequestIssues(owner, repo string, number int) ([]Issue, error) {
-	opts := &giteeapi.GetV5ReposOwnerRepoPullsNumberIssuesOpts{}
+	opts := &giteeapi.GetV5ReposOwnerRepoPullsNumberIssuesOpts{Page: optional.NewInt32(1), PerPage: optional.NewInt32(100)}
 	is, _, err := c.giteeAPI.PullRequestsApi.GetV5ReposOwnerRepoPullsNumberIssues(c.context, owner, repo, int32(number), opts)
 	var issues []Issue
 	if err != nil {
