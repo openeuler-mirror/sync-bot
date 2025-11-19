@@ -13,5 +13,6 @@ func GetSyncProjectOfOpenEuler() map[string]bool {
 		"docs":                 true,
 		"yocto-meta-openeuler": true,
 		"hikptool":             true,
+		"umdk":                 true,
 	}
 }
