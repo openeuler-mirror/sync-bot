@@ -4,105 +4,79 @@ import (
 	"fmt"
 	"strings"
 
-	"sync-bot/gitee"
 	"sync-bot/util"
 	"sync-bot/util/rpm"
+
+	"github.com/opensourceways/robot-framework-lib/client"
+	"github.com/opensourceways/robot-framework-lib/utils"
 
 	"github.com/sirupsen/logrus"
 )
 
-func (s *Server) greeting(owner string, repo string, number int, targetBranch string) {
-	logger := logrus.WithFields(logrus.Fields{
-		"owner":        owner,
-		"repo":         repo,
-		"number":       number,
-		"targetBranch": targetBranch,
-	})
-	branches, err := s.GiteeClient.GetBranches(owner, repo, true)
-	if err != nil {
-		logger.Errorln("Get Branches failed:", err)
+func (bot *robot) greeting(org string, repo string, number string, targetBranch string, logger *logrus.Entry) {
+	branches, ok := bot.cli.GetRepoAllBranch(org, repo)
+	if !ok {
+		logger.Errorf("Get Branches failed. org: %s, repo: %s, number: %s, targetBranch: %s", org, repo, number, targetBranch)
 		return
 	}
+	type branchExt struct {
+		Name, Version, Release string
+	}
+	branchesExt := make([]branchExt, len(branches))
 	for i, branch := range branches {
-		// convert branch to branch URL
-		if branches[i].Name == targetBranch {
-			// mark target branch of current pull request
-			branches[i].Name = fmt.Sprintf("__*__ [%s](https://gitee.com/%s/%s/tree/%s)",
-				branch.Name, owner, repo, branch.Name)
+		if branchesExt[i].Name == targetBranch {
+			branches[i].Name = fmt.Sprintf("__*__ [%s](https://gitcode.com/%s/%s/tree/%s)",
+				branch.Name, org, repo, branch.Name)
 		} else {
-			branches[i].Name = fmt.Sprintf("[%s](https://gitee.com/%s/%s/tree/%s)",
-				branch.Name, owner, repo, branch.Name)
+			branchesExt[i].Name = fmt.Sprintf("[%s](https://gitcode.com/%s/%s/tree/%s)",
+				branch.Name, org, repo, branch.Name)
 		}
 		// extract Version and Release from spec file
-		spec, err1 := s.GiteeClient.GetTextFile(owner, repo, repo+".spec", branch.Name)
-		if err1 != nil {
-			logger.Errorln("Get spec file failed:", err)
+		spec, ok := bot.cli.GetPathContent(org, repo, repo+".spec", branch.Name)
+		if !ok {
+			logger.Errorf("Get spec file failed. org: %s, repo: %s, number: %s, targetBranch: %s", org, repo, number, targetBranch)
 			continue
 		}
-		s := rpm.NewSpec(spec)
+		s := rpm.NewSpec(utils.GetString(spec.Content))
 		if s != nil {
-			branches[i].Version = s.Version()
-			branches[i].Release = s.Release()
+			branchesExt[i].Version = s.Version()
+			branchesExt[i].Release = s.Release()
 		}
 	}
 
-	replyContent, err := executeTemplate(replySyncCheckTmpl, branches)
+	replyContent, err := executeTemplate(replySyncCheckTmpl, branchesExt)
 	if err != nil {
-		logrus.WithFields(logrus.Fields{
-			"tmpl":     replySyncCheckTmpl,
-			"branches": branches,
-		}).Errorln("Execute template failed:", err)
+		logger.Errorln("Execute template failed:", err)
 		return
 	}
-
-	err = s.GiteeClient.CreateComment(owner, repo, number, replyContent)
-	if err != nil {
-		logrus.WithFields(logrus.Fields{
-			"owner":        owner,
-			"repo":         repo,
-			"number":       number,
-			"replyContent": replyContent,
-		}).Errorln("Create comment failed:", err)
-	} else {
-		logrus.WithFields(logrus.Fields{
-			"owner":        owner,
-			"repo":         repo,
-			"number":       number,
-			"replyContent": replyContent,
-		}).Infoln("Reply sync-check.")
-	}
+	bot.cli.CreatePRComment(org, repo, number, replyContent)
 }
 
-func (s *Server) replySync(e gitee.CommentPullRequestEvent) {
-	owner := e.Repository.Namespace
-	repo := e.Repository.Path
-	number := e.PullRequest.Number
-	comment := e.Comment.Body
-	user := e.Comment.User.Username
-	url := e.Comment.HTMLURL
+func (bot *robot) replySync(evt *client.GenericEvent, logger *logrus.Entry) {
+	owner := utils.GetString(evt.Org)
+	repo := utils.GetString(evt.Repo)
+	number := utils.GetString(evt.Number)
+	comment := utils.GetString(evt.Comment)
+	user := utils.GetString(evt.Commenter)
+	url := utils.GetString(evt.HtmlURL)
 
 	opt, err := parseSyncCommand(comment)
 	if err != nil {
-		logrus.WithFields(logrus.Fields{
-			"opt": opt,
-		}).Errorln("Parse /sync command failed:", err)
+		logger.Errorf("Parse /sync command failed: %s", err)
 		comment := fmt.Sprintf("Receive comment look like /sync command, but parseSyncCommand failed: %v", err)
-		logrus.Errorln(comment)
-		err = s.GiteeClient.CreateComment(owner, repo, number, comment)
-		if err != nil {
-			logrus.Errorln("Create Comment failed:", err)
-		}
+		logger.Errorln(comment)
+		bot.cli.CreatePRComment(owner, repo, number, comment)
 		return
 	}
 
 	// retrieve all branches
-	allBranches, err := s.GiteeClient.GetBranches(owner, repo, false)
-	if err != nil {
-		comment := fmt.Sprintf("List branches failed: %v", err)
-		logrus.Errorln(comment)
-		err = s.GiteeClient.CreateComment(owner, repo, number, comment)
-		if err != nil {
-			logrus.Errorln("Create Comment failed:", err)
+	allBranches, ok := bot.cli.GetRepoAllBranch(owner, repo)
+	if !ok {
+		comment := fmt.Sprintf("List branches failed. org: %s, repo: %s, number: %s", owner, repo, number)
+		logger.Errorln(comment)
+		ok = bot.cli.CreatePRComment(owner, repo, number, comment)
+		if !ok {
+			logger.Errorf("Create Comment failed. org: %s, repo: %s, number: %s", owner, repo, number)
 		}
 		return
 	}
@@ -140,69 +114,42 @@ func (s *Server) replySync(e gitee.CommentPullRequestEvent) {
 
 	replyComment, err := executeTemplate(replySyncTmpl, data)
 	if err != nil {
-		logrus.WithFields(logrus.Fields{
-			"tmpl": replySyncTmpl,
-			"data": data,
-		}).Errorln("Execute template failed:", err)
+		logger.Errorln("Execute template failed:", err)
 		return
 	}
-	err = s.GiteeClient.CreateComment(owner, repo, number, replyComment)
-	if err != nil {
-		logrus.WithFields(logrus.Fields{
-			"owner":        owner,
-			"repo":         repo,
-			"number":       number,
-			"replyComment": replyComment,
-		}).Errorln("Create comment failed:", err)
+	ok = bot.cli.CreatePRComment(owner, repo, number, replyComment)
+	if !ok {
+		logger.Errorln("Create comment failed:", err)
 	} else {
-		logrus.WithFields(logrus.Fields{
-			"owner":        owner,
-			"repo":         repo,
-			"number":       number,
-			"replyComment": replyComment,
-		}).Infoln("Reply sync.")
+		logger.Infoln("Reply sync.")
 	}
 }
 
-func (s *Server) NotePullRequest(e gitee.CommentPullRequestEvent) {
-	owner := e.Repository.Namespace
-	repo := e.Repository.Path
-	number := e.PullRequest.Number
-	comment := e.Comment.Body
-	user := e.Comment.User.Username
-	url := e.Comment.HTMLURL
-	targetBranch := e.PullRequest.Base.Ref
-	state := e.PullRequest.State
-	title := e.PullRequest.Title
-
-	logger := logrus.WithFields(logrus.Fields{
-		"owner":        owner,
-		"repo":         repo,
-		"number":       number,
-		"comment":      comment,
-		"uer":          user,
-		"url":          url,
-		"targetBranch": targetBranch,
-		"state":        state,
-		"title":        title,
-	})
-	logger.Infoln("NotePullRequest")
+func (bot *robot) NotePullRequest(evt *client.GenericEvent, logger *logrus.Entry) {
+	org := utils.GetString(evt.Org)
+	repo := utils.GetString(evt.Repo)
+	number := utils.GetString(evt.Number)
+	comment := utils.GetString(evt.Comment)
+	user := utils.GetString(evt.Commenter)
+	targetBranch := utils.GetString(evt.Base)
+	state := utils.GetString(evt.State)
+	title := utils.GetString(evt.Title)
 
 	if util.MatchSyncCheck(comment) {
 		logger.Infoln("Receive /sync-check command")
-		s.greeting(owner, repo, number, targetBranch)
+		bot.greeting(org, repo, number, targetBranch, logger)
 		return
 	}
 
 	if util.MatchSync(comment) {
 		logger.Infoln("Receive /sync command")
 		switch state {
-		case gitee.StateOpen:
+		case "opened":
 			logger.Infoln("Pull request is open, just replay sync.")
-			s.replySync(e)
-		case gitee.StateMerged:
+			bot.replySync(evt, logger)
+		case "merged":
 			logger.Infoln("Pull request is merge, perform sync operation.")
-			_ = s.sync(owner, repo, e.PullRequest, user, url, comment)
+			_ = bot.sync(evt, user, comment, logger)
 		default:
 			logger.Infoln("Ignoring unhandled pull request state.")
 		}
@@ -212,7 +159,7 @@ func (s *Server) NotePullRequest(e gitee.CommentPullRequestEvent) {
 	if util.MatchClose(comment) {
 		logger.Infoln("Receive /close command")
 		if util.MatchTitle(title) {
-			s.ClosePullRequest(owner, repo, e.PullRequest)
+			bot.ClosePullRequest(evt, org, repo, number, logger)
 		} else {
 			logger.Infoln("Pull request not created by sync-bot, ignoring /close.")
 		}
@@ -220,34 +167,4 @@ func (s *Server) NotePullRequest(e gitee.CommentPullRequestEvent) {
 	}
 
 	logger.Infoln("Ignoring unhandled comment.")
-}
-
-func (s *Server) HandleNoteEvent(e gitee.CommentPullRequestEvent) {
-	owner := e.Repository.Namespace
-	repo := e.Repository.Path
-
-	logger := logrus.WithFields(logrus.Fields{
-		"owner": owner,
-		"repo":  repo,
-	})
-
-	// TODO: need to be configurable
-	// ignore repo in openeuler
-	needSyncProjects := GetSyncProjectOfOpenEuler()
-	if owner == "openeuler" && !needSyncProjects[repo] {
-		logger.Infoln("Ignore repo in openeuler")
-		return
-	}
-
-	switch e.Action {
-	case gitee.ActionComment:
-		switch e.NotableType {
-		case gitee.NotableTypePullRequest:
-			s.NotePullRequest(e)
-		default:
-			logger.Infoln("Ignoring unhandled notable type:", e.NotableType)
-		}
-	default:
-		logger.Infoln("Ignoring unhandled action:", e.Action)
-	}
 }

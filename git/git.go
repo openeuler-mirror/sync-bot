@@ -28,13 +28,13 @@ const (
 // MergeOption merge option
 type MergeOption string
 
-// MergeOption enum
+// MergeFF MergeOption enum
 const (
 	MergeFF MergeOption = "--ff"
 )
 
 const repoPath = "repos"
-const gitee = "gitee.com"
+const gitcode = "gitcode.com"
 
 // Client can clone repos. It keeps a local cache, so successive clones of the
 // same repo should be quick. Create with NewClient. Be sure to clean it up.
@@ -44,7 +44,7 @@ type Client struct {
 	user string
 
 	// needed to generate the token.
-	tokenGenerator func() []byte
+	tokenGenerator []byte
 
 	// dir is the location of the git cache.
 	dir string
@@ -63,7 +63,7 @@ type Client struct {
 
 // NewClient returns a client
 func NewClient() (*Client, error) {
-	return NewClientWithHost(gitee)
+	return NewClientWithHost(gitcode)
 }
 
 // NewClientWithHost creates a client with specified host.
@@ -74,7 +74,7 @@ func NewClientWithHost(host string) (*Client, error) {
 	}
 
 	return &Client{
-		tokenGenerator: func() []byte { return nil },
+		tokenGenerator: nil,
 		dir:            repoPath,
 		git:            g,
 		base:           fmt.Sprintf("https://%s", host),
@@ -85,7 +85,7 @@ func NewClientWithHost(host string) (*Client, error) {
 
 // SetCredentials sets credentials in the client to be used for pushing to
 // or pulling from remote repositories.
-func (c *Client) SetCredentials(user string, tokenGenerator func() []byte) {
+func (c *Client) SetCredentials(user string, tokenGenerator []byte) {
 	c.credLock.Lock()
 	defer c.credLock.Unlock()
 	c.user = user
@@ -95,7 +95,7 @@ func (c *Client) SetCredentials(user string, tokenGenerator func() []byte) {
 func (c *Client) getCredentials() (string, string) {
 	c.credLock.RLock()
 	defer c.credLock.RUnlock()
-	return c.user, string(c.tokenGenerator())
+	return c.user, string(c.tokenGenerator)
 }
 
 func (c *Client) lockRepo(repo string) {
@@ -295,7 +295,7 @@ func (r *Repo) PushUpstreamToOrigin(branch string) error {
 
 // CreateBranchAndPushToOrigin create a branch by upstream/xx
 func (r *Repo) CreateBranchAndPushToOrigin(branch, upstream string) error {
-	logrus.Infof("Create new branch from upstream")
+	logrus.Infof("Create new branch %s from upstream %s", branch, upstream)
 	co := r.gitCommand("checkout", "-b", branch, upstream)
 	b, err := co.CombinedOutput()
 	if err != nil {
@@ -464,11 +464,18 @@ func (r *Repo) DeleteRemoteBranch(branch string) error {
 }
 
 // FetchPullRequest just fetch
-func (r *Repo) FetchPullRequest(number int) error {
-	logrus.Infof("Fetching %s/%s#%d.", r.owner, r.repo, number)
-	if b, err := retryCmd(r.dir, r.git, "fetch", r.base+"/"+r.owner+"/"+r.repo,
-		fmt.Sprintf("+refs/pull/%d/head:refs/remotes/origin/pull/%d", number, number)); err != nil {
-		return fmt.Errorf("git fetch failed for PR %d: %v. output: %s", number, err, string(b))
+func (r *Repo) FetchPullRequest(number string) error {
+	logrus.Infof("Fetching %s/%s#%s.", r.owner, r.repo, number)
+	refspecPull := fmt.Sprintf("+refs/pull/%s/head:refs/remotes/origin/pull/%s", number, number)
+	if b, err := retryCmd(r.dir, r.git, "fetch", r.base+"/"+r.owner+"/"+r.repo, refspecPull); err == nil {
+		return nil
+	} else {
+		logrus.WithError(err).Warnf("Failed to fetch with refs/pull for PR %s, trying with refs/merge-requests. Output: %s", number, string(b))
+	}
+
+	refspecMerge := fmt.Sprintf("+refs/merge-requests/%s/head:refs/remotes/origin/merge-requests/%s", number, number)
+	if b, err := retryCmd(r.dir, r.git, "fetch", r.base+"/"+r.owner+"/"+r.repo, refspecMerge); err != nil {
+		return fmt.Errorf("git fetch failed for PR %s with both refs/pull and refs/merge-requests: %v. output: %s", number, err, string(b))
 	}
 	return nil
 }
