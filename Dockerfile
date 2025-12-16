@@ -1,4 +1,4 @@
-FROM openeuler/go:1.24.0 AS BUILDER
+FROM openeuler/go:1.23.4-oe2403lts AS BUILDER
 RUN dnf -y install git gcc
 
 ARG USER
