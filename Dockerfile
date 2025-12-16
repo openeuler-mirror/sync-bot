@@ -1,36 +1,27 @@
-# Build stage
-FROM golang:1.24.0 AS build
+FROM openeuler/go:1.24.0 AS BUILDER
+RUN dnf -y install git gcc
 
 ARG USER
 ARG PASS
 RUN echo "machine github.com login $USER password $PASS" > ~/.netrc
 
-ADD . /go-build
+# build binary
+WORKDIR /opt/source
+COPY . .
+RUN go env -w GO111MODULE=on && \
+    go env -w CGO_ENABLED=1 && \
+    go build -a -o sync-bot -buildmode=pie -ldflags "-s -linkmode 'external' -extldflags '-Wl,-z,now'" .
 
-WORKDIR /go-build
+# copy binary config and utils
+FROM openeuler/openeuler:24.03-lts
+RUN dnf -y update && \
+    dnf in -y shadow && \
+    groupadd -g 1000 robot && \
+    useradd -u 1000 -g robot -s /bin/bash -m robot && \
+    dnf clean all
 
-ENV GOPROXY=https://goproxy.cn,direct
+USER robot
 
-RUN go build -o /sync-bot
-
-
-# Final stage
-FROM openeuler/openeuler:22.03-lts
-
-RUN dnf -y install git
-
-RUN git config --global user.name openeuler-sync-bot
-
-RUN git config --global user.email openeuler.syncbot@gmail.com
-
-EXPOSE 8765
-
-WORKDIR /
-
-COPY --from=build /sync-bot /
-COPY drop_branches.config /
-
-# ADD secret.conf /
-# ADD token.conf /
+COPY --chown=robot --from=BUILDER /opt/source/sync-bot /opt/app/sync-bot
 
 ENTRYPOINT ["/opt/app/sync-bot"]
