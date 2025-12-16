@@ -31,7 +31,7 @@ X-Gitee-Token: Secret
     "name": "syncbotExample",
     "path": "syncbot-example",
     "full_name": "open-euler/syncbot-example",
-    "owner": {
+    "org": {
       "id": 341810,
       "name": "syncBot",
       "email": "custa@126.com",
@@ -79,7 +79,7 @@ X-Gitee-Token: Secret
     "name": "syncbotExample",
     "path": "syncbot-example",
     "full_name": "open-euler/syncbot-example",
-    "owner": {
+    "org": {
       "id": 341810,
       "name": "syncBot",
       "email": "custa@126.com",
@@ -223,7 +223,7 @@ X-Gitee-Token: Secret
         "name": "syncbotExample",
         "path": "syncbot-example",
         "full_name": "chenyanpanHW/syncbot-example",
-        "owner": {
+        "org": {
           "id": 7400170,
           "name": "chenyanpanHW",
           "email": "chenyanpan@huawei.com",
@@ -289,7 +289,7 @@ X-Gitee-Token: Secret
         "name": "syncbotExample",
         "path": "syncbot-example",
         "full_name": "open-euler/syncbot-example",
-        "owner": {
+        "org": {
           "id": 341810,
           "name": "syncBot",
           "email": "custa@126.com",

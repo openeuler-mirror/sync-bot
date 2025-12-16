@@ -2,76 +2,27 @@ package main
 
 import (
 	"flag"
-	"net/http"
 	"os"
-	"strconv"
 
-	"sync-bot/git"
-	"sync-bot/gitee"
+	"github.com/opensourceways/robot-framework-lib/framework"
 	"sync-bot/hook"
-	"sync-bot/secret"
-
-	"github.com/emicklei/go-restful/v3"
-	"github.com/sirupsen/logrus"
 )
 
-func init() {
-	logrus.SetLevel(logrus.DebugLevel)
-	logrus.SetReportCaller(true)
-	logrus.SetFormatter(&logrus.TextFormatter{
-		DisableColors: true,
-		FullTimestamp: true,
-	})
-}
-
-type options struct {
-	//dryRun        bool   //
-	giteeToken    string //
-	port          int    //
-	webhookSecret string //
-}
-
-func (o *options) Validate() error {
-	return nil
-}
-
-func gatherOptions(fs *flag.FlagSet, args ...string) options {
-	var o options
-	//fs.BoolVar(&o.dryRun, "dry-run", true, "Dry run for testing. Uses API tokens but does not mutate.")
-	fs.StringVar(&o.giteeToken, "gitee-token", "token.conf", "Path to the file containing the Gitee token.")
-	fs.IntVar(&o.port, "port", 8765, "Port to listen on.")
-	fs.StringVar(&o.webhookSecret, "webhook-secret", "secret.conf", "Path to the file containing the Gitee Webhook secret.")
-	_ = fs.Parse(args)
-	return o
-}
+const component = "robot-sync-bot"
 
 func main() {
-	o := gatherOptions(flag.NewFlagSet(os.Args[0], flag.ExitOnError), os.Args[1:]...)
-	if err := o.Validate(); err != nil {
-		logrus.WithError(err).Fatal("Invalid options")
+	logger := framework.NewLogger().WithField("component", component)
+	opt := new(robotOptions)
+	// Gather the necessary arguments from command line for project startup
+	opt.gatherOptions(flag.NewFlagSet(os.Args[0], flag.ExitOnError), logger, os.Args[1:]...)
+	if opt.service.Interrupt {
+		return
 	}
 
-	err := secret.LoadSecrets([]string{o.giteeToken, o.webhookSecret})
-	if err != nil {
-		logrus.WithError(err).Fatal("Load secret failed.")
+	cnf := opt.service.ConfigmapAgentValue.GetConfigmap().(*hook.Configuration)
+	bot := hook.NewRobot(cnf, opt.service.TokenValue, logger)
+	if bot == nil {
+		return
 	}
-
-	gitClient, err := git.NewClient()
-	if err != nil {
-		logrus.WithError(err).Fatalf("New git client failed: %v", err)
-	}
-	// TODO: user must be configurable
-	gitClient.SetCredentials("openeuler-sync-bot", secret.GetGenerator(o.giteeToken))
-
-	server := hook.Server{
-		GitClient:   gitClient,
-		GiteeClient: gitee.NewClient(secret.GetGenerator(o.giteeToken)),
-		Secret:      secret.GetGenerator(o.webhookSecret),
-	}
-	restful.Add(server.WebService())
-	port := ":" + strconv.Itoa(o.port)
-	logrus.WithFields(logrus.Fields{
-		"Option": o,
-	}).Infoln("Listen...")
-	logrus.Fatal(http.ListenAndServe(port, nil))
+	framework.StartupServer(framework.NewServer(bot, opt.service), opt.service)
 }

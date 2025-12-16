@@ -50,7 +50,7 @@ In response to [this]({{.URL}}):
 | Sha | Datetime | Message |
 |---|---|---|
 {{- range .Commits}}
-|[{{slice .Sha 0 8}}]({{.HTMLURL}})|{{.Commit.Author.Date}}|{{.Commit.Message}}|
+|[{{slice .SHA 0 8}}]({{.HTMLURL}})|{{.CommitTime}}|{{.Message}}|
 {{- end}}
 `
 	syncKernelPRBody = `
