@@ -33,4 +33,4 @@ COPY drop_branches.config /
 # ADD secret.conf /
 # ADD token.conf /
 
-CMD ["/sync-bot"]
+ENTRYPOINT ["/opt/app/sync-bot"]
