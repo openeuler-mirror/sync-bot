@@ -1,6 +1,10 @@
 # Build stage
 FROM golang:1.24.0 AS build
 
+ARG USER
+ARG PASS
+RUN echo "machine github.com login $USER password $PASS" > ~/.netrc
+
 ADD . /go-build
 
 WORKDIR /go-build
